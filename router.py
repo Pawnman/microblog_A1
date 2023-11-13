@@ -21,6 +21,10 @@ async def post_UserAccount(data: UserAccount):
 async def post_Message(data: Message):
     q.post_Message(data)
    
+@router.post("/{id}_{text}_tweet")
+async def tweet(id: str,text: str):
+    q.tweet(id, text)
+
 @router.put("/{id}_Update_account")
 async def update_UserAccount(id: str, data: UserAccount):
     q.update_UserAccount(id, data)
@@ -29,6 +33,18 @@ async def update_UserAccount(id: str, data: UserAccount):
 async def update_Message(id: str, data: Message):
     q.update_Message(id, data)
 
+@router.put("/{id1}_{id2}_Follow")
+async def follow(id1: str, id2: str):
+    q.follow(id1, id2)
+
+@router.put("/{id1}_{id2}_Unfollow")
+async def unfollow(id1:str, id2: str):
+    q.unfollow(id1, id2)
+    
 @router.delete("/{id}")
 async def delete_document(id:str, collection_name: str):
     q.delete_document(id, collection_name)
+
+@router.delete("/{id}_delete_tweet")
+async def delete_tweet(id: str):
+    q.delete_tweet(id)

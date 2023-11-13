@@ -1,36 +1,34 @@
 from fastapi import APIRouter
-from Classes import UserAccount
-from bson import ObjectId
-import json
-from pymongo import MongoClient
-import asyncio
+from typing import Optional
+from Classes import UserAccount, Message
+import queries as q
 
-CONNECTION_STRING = "mongodb://localhost:27017"
-client = MongoClient(CONNECTION_STRING)
-db = client.microblog
 router = APIRouter()
- 
- 
-@router.get("/")
-async def get_collection(collection_name, id: str = "all"):
-    if id  == "all": 
-        cursor = db[collection_name].find({id}, {'_id': 0}) 
-        return list(cursor)
-    else:
-        doc = db[collection_name].find_one({"_id": ObjectId(id)}, {'_id': 0})
-        if doc:
-            return doc
-        else:
-            return None        
+
+@router.get("/get_collection")
+async def get_collection(collection_name: str) -> list[Optional[dict]]:
+    return q.get_collection(collection_name)
+
+@router.get("/{id}_get_document")
+async def get_document(id: str, collection_name: str) -> Optional[dict]:
+    return q.get_document(id, collection_name)
         
-@router.post("/")
-async def post_document(data, collection_name):
-    db[collection_name].insert_one(json.loads(data))
+@router.post("/post_UserAccount")
+async def post_UserAccount(data: UserAccount):
+    q.post_UserAccount(data)
+
+@router.post("/post_Message")
+async def post_Message(data: Message):
+    q.post_Message(data)
    
-@router.put("/{id}")
-async def update_document(id: str, data, collection_name):
-    db[collection_name].find_one_and_update({"_id": ObjectId(id)}, {"$set": json.loads(data)})
+@router.put("/{id}_Update_account")
+async def update_UserAccount(id: str, data: UserAccount):
+    q.update_UserAccount(id, data)
  
+@router.put("/{id}_Update_message")
+async def update_Message(id: str, data: Message):
+    q.update_Message(id, data)
+
 @router.delete("/{id}")
-async def delete_document(id:str, collection_name):
-    db[collection_name].find_one_and_delete({"_id":ObjectId(id)})
+async def delete_document(id:str, collection_name: str):
+    q.delete_document(id, collection_name)

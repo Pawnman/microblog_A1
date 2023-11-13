@@ -1,7 +1,8 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.staticfiles import StaticFiles
 from pymongo import MongoClient
 import uvicorn
-from router import router,get_collection
+from router import router
 app = FastAPI()
 app.include_router(router)
 

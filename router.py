@@ -41,6 +41,10 @@ async def follow(id1: str, id2: str):
 async def unfollow(id1:str, id2: str):
     q.unfollow(id1, id2)
     
+@router.put("/{id}_Ban")
+async def ban(id: str, state: bool = False):
+    q.ban(id, state) 
+    
 @router.delete("/{id}")
 async def delete_document(id:str, collection_name: str):
     q.delete_document(id, collection_name)

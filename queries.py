@@ -36,6 +36,8 @@ def follow(id1:str, id2: str):
     other = get_document(id2, "UserAccount")
     if not (user and other):
         raise Exception("One or both users do not exist.")
+    if not user["active"] or not other["active"]:
+        raise Exception("Inactive user")
     if id2 in user["following"]:
         raise Exception("You are already following this user.")
     else:
@@ -49,6 +51,8 @@ def unfollow(id:str, id2: str):
     other = get_document(id2, "UserAccount")
     if not (user and other):
         raise Exception("One or both users do not exist.")
+    if not user["active"] or not other["active"]:
+        raise Exception("Inactive user")
     if id2 not in user["following"]:
         raise Exception("You are not currently following that user.")
     else:
@@ -59,6 +63,8 @@ def unfollow(id:str, id2: str):
 
 def tweet(id: str, text: str):
     user = get_document(id, "UserAccount")
+    if not user["active"]:
+        raise Exception("User is inactive")
     message = {
             "user_id": id,
             "message": text,
@@ -81,3 +87,11 @@ def delete_tweet(id: str):
         update_UserAccount(_id, UserAccount(**user))
         delete_document(id, "Messages")
     
+def ban(id: str, state: bool = False):
+    user = get_document(id, "UserAccount")
+    if user["active"] != state:
+        user["active"] = state
+        update_UserAccount(id, UserAccount(**user)) 
+    else:
+        raise Exception("User is already inactive")
+

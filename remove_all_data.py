@@ -1,9 +1,5 @@
 from pymongo import MongoClient
-import Classes
 from pydantic import BaseModel
-import queries
-import pymongo
-from pymongo import MongoClient
 
 CONNECTION_STRING = "mongodb://localhost:27017"
 client = MongoClient(CONNECTION_STRING)

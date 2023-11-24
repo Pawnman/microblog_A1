@@ -1,9 +1,33 @@
-from fastapi import APIRouter
-from typing import Optional
+from typing import Any
+
+from bson import ObjectId
+from fastapi import APIRouter, status, Depends
+from pymemcache import HashClient
+from starlette.responses import Response
 from Classes import UserAccount, Message
-import queries as q
+
+#from cache.memcached_utils import get_memcached_client
+from repository import Repository
+#from search_repository import SearchStudentRepository
+
+#from student import Student, UpdateStudentModel
 
 router = APIRouter()
+
+
+@router.get("/get_all_users")
+async def get_all_users(repository: Repository = Depends(Repository.get_instance)) -> list[UserAccount]:
+    return await repository.get_all()
+
+
+
+'''from fastapi import APIRouter
+from typing import Optional
+from Classes import UserAccount, Message
+#import queries as q
+
+router = APIRouter()
+
 
 @router.get("/get_collection")
 async def get_collection(collection_name: str) -> list[Optional[dict]]:
@@ -52,3 +76,4 @@ async def delete_document(id:str, collection_name: str):
 @router.delete("/{id}_delete_tweet")
 async def delete_tweet(id: str):
     q.delete_tweet(id)
+'''

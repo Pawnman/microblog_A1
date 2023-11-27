@@ -4,9 +4,6 @@ import asyncio
 from db import connect_and_init_mongo, close_mongo_connect
 #from elasticsearch_utils import connect_and_init_elasticsearch, close_elasticsearch_connect
 
-def connect_and_init_elasticsearch():
-    pass
-
 async def startup():
     await connect_and_init_mongo()
     #init_elasticsearch_future = connect_and_init_elasticsearch()

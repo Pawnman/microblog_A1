@@ -7,7 +7,7 @@ from starlette.responses import Response
 from Classes import UserAccount, Message
 
 #from cache.memcached_utils import get_memcached_client
-from repository import Repository
+from repository import Users, Messages
 #from search_repository import SearchStudentRepository
 
 #from student import Student, UpdateStudentModel
@@ -16,9 +16,31 @@ router = APIRouter()
 
 
 @router.get("/get_all_users")
+async def get_all_users(users: Users = Depends(Users.get_instance)) -> list[UserAccount]:
+    return await users.get_all()
+
+@router.post("/post_UserAccount")
+async def post_user_account(data: UserAccount,
+                            users: Users = Depends(Users.get_instance)) -> str:
+    user_id = await users.post_user_account(data)
+    return user_id
+
+@router.post("/post_Message")
+async def post_Message(data: Message,
+                        messages: Messages = Depends(Messages.get_instance)) -> str:
+    message_id = await messages.post_message(data)
+    return message_id
+
+@router.get("/get_all_messages")
+async def get_all_messages(messages: Messages = Depends(Messages.get_instance)) -> list[Message]:
+    return await messages.get_all()
+
+
+''''
+@router.get("/get_all_messages")
 async def get_all_users(repository: Repository = Depends(Repository.get_instance)) -> list[UserAccount]:
     return await repository.get_all()
-
+    '''
 
 
 '''from fastapi import APIRouter

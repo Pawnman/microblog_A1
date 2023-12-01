@@ -24,29 +24,43 @@ class Users:
             db_users.append(map_users_id_with_name(user))
         return db_users
 
+    async def get_by_id(self, user_id: str) -> UserAccount | None:
+        print(f'Get user account {user_id} from mongo')
+        db_user = await self._db_collection.find_one(get_filter(user_id))
+        return map_users_id_with_name(db_user)
+    
     async def post_user_account(self, data: UserAccount) -> str:
         insert_result = await self._db_collection.insert_one(dict(data))
         return str(insert_result.inserted_id)
+    
+    async def delete(self, id: str) -> UserAccount | None:
+        db_user = await self._db_collection.find_one_and_delete(get_filter(id))
+        return map_users_id_with_name(db_user)
+
+    async def update(self, id: str, data: UserAccount):
+        db_user = await self._db_collection.find_one_and_update({"_id": ObjectId(id)}, {"$set": dict(data)})
+        return map_users_id_with_name(db_user)
 
     @staticmethod
     def get_instance(db_collection: AsyncIOMotorCollection = Depends(get_db_users_collection)):
         return Users(db_collection)
-'''
-    async def get_by_id(self, student_id: str) -> Student | None:
-        print(f'Get student {student_id} from mongo')
-        db_student = await self._db_collection.find_one(get_filter(student_id))
-        return map_student(db_student)
 
-    async def update(self, student_id: str, student: UpdateStudentModel) -> Student | None:
+
+
+"""
+    async def update(self, student_id: str, student: UpdateStudentModel?????) -> Student | None:
         db_student = await self._db_collection.find_one_and_replace(get_filter(student_id), dict(student))
         return map_student(db_student)
-
-    async def delete(self, student_id: str) -> Student | None:
-        db_student = await self._db_collection.find_one_and_delete(get_filter(student_id))
-        return map_student(db_student)
-
-
+"""
 '''
+def update_UserAccount(id: str, data: UserAccount):
+    db["UserAccount"].find_one_and_update({"_id": ObjectId(id)}, {"$set": dict(data)})
+ 
+def update_Message(id: str, data: Message):
+    db["Messages"].find_one_and_update({"_id": ObjectId(id)}, {"$set": dict(data)})
+'''
+
+
 
 class Messages:
     _db_collection: AsyncIOMotorCollection
@@ -63,6 +77,12 @@ class Messages:
     async def post_message(self, data: Message) -> str:
         insert_result = await self._db_collection.insert_one(dict(data))
         return str(insert_result.inserted_id)
+
+    async def get_by_id(self, message_id: str) -> UserAccount | None:
+        print(f'Get message {message_id} from mongo')
+        db_message = await self._db_collection.find_one(get_filter(message_id))
+        return map_message_id(db_message)
+
 
     @staticmethod
     def get_instance(db_collection: AsyncIOMotorCollection = Depends(get_db_messsages_collection)):

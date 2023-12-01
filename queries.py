@@ -17,7 +17,7 @@ def get_document(id: str, collection_name: str) -> Optional[dict]:
     return doc
 
 def post_UserAccount(data: UserAccount):
-     db["UserAccount"].insert_one(dict(data))
+    db["UserAccount"].insert_one(dict(data))
 
 def post_Message(data: Message):
     db["Messages"].insert_one(dict(data))

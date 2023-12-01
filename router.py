@@ -1,9 +1,121 @@
-from fastapi import APIRouter
-from typing import Optional
+from typing import Any
+
+from bson import ObjectId
+from fastapi import APIRouter, status, Depends
+from pymemcache import HashClient
+from starlette.responses import Response
 from Classes import UserAccount, Message
-import queries as q
+
+#from cache.memcached_utils import get_memcached_client
+from repository import Users, Messages
+#from search_repository import SearchStudentRepository
+
+#from student import Student, UpdateStudentModel
 
 router = APIRouter()
+
+
+@router.get("/get_all_users")
+async def get_all_users(users: Users = Depends(Users.get_instance)) -> list[UserAccount]:
+    return await users.get_all()
+
+@router.get("/{id}_get_user_account", response_model=UserAccount)
+async def get_by_id(id: str,
+                    users: Users = Depends(Users.get_instance)) -> Any:
+    if not ObjectId.is_valid(id):
+        return Response(status_code=status.HTTP_400_BAD_REQUEST)
+    #student = memcached_client.get(id)
+    #if student is not None:
+        #return student
+    user = await users.get_by_id(id)
+    if user is None:
+        return Response(status_code=status.HTTP_404_NOT_FOUND)
+    #memcached_client.add(id, student)
+    return user
+
+@router.get("/get_all_messages")
+async def get_all_messages(messages: Messages = Depends(Messages.get_instance)) -> list[Message]:
+    return await messages.get_all()
+
+@router.get("/{id}_get_message", response_model=Message)
+async def get_by_id(id: str,
+                    messages: Messages = Depends(Messages.get_instance)) -> Any:
+    if not ObjectId.is_valid(id):
+        return Response(status_code=status.HTTP_400_BAD_REQUEST)
+    #messages = memcached_client.get(id)
+    #if messages is not None:
+        #return student
+    message = await messages.get_by_id(id)
+    if message is None:
+        return Response(status_code=status.HTTP_404_NOT_FOUND)
+    #memcached_client.add(id, message)
+    return message
+
+@router.post("/post_UserAccount")
+async def post_user_account(data: UserAccount,
+                            users: Users = Depends(Users.get_instance)) -> str:
+    user_id = await users.post_user_account(data)
+    return user_id
+
+@router.post("/post_Message")
+async def post_message(data: Message,
+                        messages: Messages = Depends(Messages.get_instance)) -> str:
+    message_id = await messages.post_message(data)
+    return message_id
+
+@router.delete("/{id}")
+async def remove_user(id: str, users: Users = Depends(Users.get_instance)) -> Response:
+    if not ObjectId.is_valid(id):
+        return Response(status_code=status.HTTP_400_BAD_REQUEST)
+    user = await users.delete(id)
+    if user is None:
+        return Response(status_code=status.HTTP_404_NOT_FOUND)
+    #await search_repository.delete(id)
+    return Response()
+
+@router.put("/{id}_user", response_model=UserAccount)
+async def update_user_account(id: str, data: UserAccount, 
+                            users: Users = Depends(Users.get_instance)) -> Any:
+    if not ObjectId.is_valid(id):
+        return Response(status_code=status.HTTP_400_BAD_REQUEST)
+    user = await users.update(id, data)
+    if user is None:
+        return Response(status_code=status.HTTP_404_NOT_FOUND)
+    return user
+
+
+@router.put("/{id}_message", response_model=Message)
+async def update_message(id: str, data: Message, 
+                            messages: Messages = Depends(Messages.get_instance)) -> Any:
+    if not ObjectId.is_valid(id):
+        return Response(status_code=status.HTTP_400_BAD_REQUEST)
+    message = await messages.update(id, data)
+    if message is None:
+        return Response(status_code=status.HTTP_404_NOT_FOUND)
+    return message
+
+
+'''
+@router.delete("/{id}_delete_tweet")
+async def delete_tweet(id: str, messages: Messages = Depends(Messages.get_instance)) -> Response:
+    q.delete_tweet(id)
+
+'''
+
+''''
+@router.get("/get_all_messages")
+async def get_all_users(repository: Repository = Depends(Repository.get_instance)) -> list[UserAccount]:
+    return await repository.get_all()
+    '''
+
+
+'''from fastapi import APIRouter
+from typing import Optional
+from Classes import UserAccount, Message
+#import queries as q
+
+router = APIRouter()
+
 
 @router.get("/get_collection")
 async def get_collection(collection_name: str) -> list[Optional[dict]]:
@@ -52,3 +164,4 @@ async def delete_document(id:str, collection_name: str):
 @router.delete("/{id}_delete_tweet")
 async def delete_tweet(id: str):
     q.delete_tweet(id)
+'''

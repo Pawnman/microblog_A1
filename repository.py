@@ -14,10 +14,6 @@ class Users:
     def __init__(self, db_collection: AsyncIOMotorCollection):
         self._db_collection = db_collection
 
-    '''async def create(self, student: UpdateStudentModel) -> str:
-        insert_result = await self._db_collection.insert_one(dict(student))
-        return str(insert_result.inserted_id)
-'''
     async def get_all(self) -> list[UserAccount]:
         db_users = []
         async for user in self._db_collection.find():
@@ -46,12 +42,6 @@ class Users:
         return Users(db_collection)
 
 
-
-"""
-    async def update(self, student_id: str, student: UpdateStudentModel?????) -> Student | None:
-        db_student = await self._db_collection.find_one_and_replace(get_filter(student_id), dict(student))
-        return map_student(db_student)
-"""
 '''
 def update_UserAccount(id: str, data: UserAccount):
     db["UserAccount"].find_one_and_update({"_id": ObjectId(id)}, {"$set": dict(data)})
@@ -59,7 +49,6 @@ def update_UserAccount(id: str, data: UserAccount):
 def update_Message(id: str, data: Message):
     db["Messages"].find_one_and_update({"_id": ObjectId(id)}, {"$set": dict(data)})
 '''
-
 
 
 class Messages:
@@ -83,6 +72,9 @@ class Messages:
         db_message = await self._db_collection.find_one(get_filter(message_id))
         return map_message_id(db_message)
 
+    async def update(self, id: str, data: Message):
+        db_message = await self._db_collection.find_one_and_update({"_id": ObjectId(id)}, {"$set": dict(data)})
+        return map_message_id(db_message)
 
     @staticmethod
     def get_instance(db_collection: AsyncIOMotorCollection = Depends(get_db_messsages_collection)):

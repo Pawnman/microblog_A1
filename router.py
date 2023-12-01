@@ -58,7 +58,7 @@ async def post_user_account(data: UserAccount,
     return user_id
 
 @router.post("/post_Message")
-async def post_Message(data: Message,
+async def post_message(data: Message,
                         messages: Messages = Depends(Messages.get_instance)) -> str:
     message_id = await messages.post_message(data)
     return message_id
@@ -73,7 +73,7 @@ async def remove_user(id: str, users: Users = Depends(Users.get_instance)) -> Re
     #await search_repository.delete(id)
     return Response()
 
-@router.put("/{id}", response_model=UserAccount)
+@router.put("/{id}_user", response_model=UserAccount)
 async def update_user_account(id: str, data: UserAccount, 
                             users: Users = Depends(Users.get_instance)) -> Any:
     if not ObjectId.is_valid(id):
@@ -84,16 +84,18 @@ async def update_user_account(id: str, data: UserAccount,
     return user
 
 
+@router.put("/{id}_message", response_model=Message)
+async def update_message(id: str, data: Message, 
+                            messages: Messages = Depends(Messages.get_instance)) -> Any:
+    if not ObjectId.is_valid(id):
+        return Response(status_code=status.HTTP_400_BAD_REQUEST)
+    message = await messages.update(id, data)
+    if message is None:
+        return Response(status_code=status.HTTP_404_NOT_FOUND)
+    return message
+
+
 '''
-@router.put("/{id}_Update_account")
-async def update_UserAccount(id: str, data: UserAccount):
-    q.update_UserAccount(id, data)
- 
-@router.put("/{id}_Update_message")
-async def update_Message(id: str, data: Message):
-    q.update_Message(id, data)
-
-
 @router.delete("/{id}_delete_tweet")
 async def delete_tweet(id: str, messages: Messages = Depends(Messages.get_instance)) -> Response:
     q.delete_tweet(id)

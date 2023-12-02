@@ -2,9 +2,8 @@ from typing import Any
 
 from bson import ObjectId
 from fastapi import APIRouter, status, Depends
-from pymemcache import HashClient
 from starlette.responses import Response
-from Classes import UserAccount, Message
+from models.Classes import UserAccount, Message
 
 #from cache.memcached_utils import get_memcached_client
 from repository import Users, Messages

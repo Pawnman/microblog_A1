@@ -1,6 +1,8 @@
 from typing import Any
 from bson import ObjectId
-from Classes import UserAccount, Message
+from models.Classes import UserAccount, Message
+from db import connect_and_init_mongo, close_mongo_connect
+from elasticsearch.elasticsearch_utils import connect_elasticsearch_and_init, close_elasticsearch_connect
 
 ## TODO объединить
 
@@ -22,3 +24,13 @@ def map_message_id(message: Any) -> Message | None:
 
 def get_filter(id: str) -> dict:
     return {'_id': ObjectId(id)}
+
+# Запуск MongoDB и ElasticSearch при запуске приложения
+async def handle_startup():
+    await connect_and_init_mongo()
+    await connect_elasticsearch_and_init()
+
+# Закрытие MongoDB и ElasticSearch при закрытии приложения
+async def handle_shutdown():
+    await close_mongo_connect()
+    await close_elasticsearch_connect()

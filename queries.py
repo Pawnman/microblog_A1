@@ -1,7 +1,7 @@
 from pymongo import MongoClient
 from bson import ObjectId
-from typing import Optional, List
-from Classes import UserAccount, Message
+from typing import Optional
+from models.Classes import UserAccount, Message
 import datetime
 
 CONNECTION_STRING = "mongodb://localhost:27017"

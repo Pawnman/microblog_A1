@@ -1,9 +1,7 @@
 import xml.etree.ElementTree as ET
 import secrets
-import pymongo
 from pymongo import MongoClient
-import Classes
-from pydantic import BaseModel
+from models import Classes
 
 CONNECTION_STRING = "mongodb://localhost:27017"
 client = MongoClient(CONNECTION_STRING)

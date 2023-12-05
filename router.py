@@ -3,11 +3,12 @@ from typing import Any
 from bson import ObjectId
 from fastapi import APIRouter, status, Depends
 from starlette.responses import Response
-from models.Classes import UserAccount, Message
+from models.user import User
+from models.message import Tweet
 
 #from cache.memcached_utils import get_memcached_client
 from repository import Users, Messages
-#from search_repository import SearchStudentRepository
+from searchdb_repo import UserSearchRepository
 
 #from student import Student, UpdateStudentModel
 
@@ -15,10 +16,11 @@ router = APIRouter()
 
 
 @router.get("/get_all_users")
-async def get_all_users(users: Users = Depends(Users.get_instance)) -> list[UserAccount]:
+async def get_all_users(users: Users = Depends(Users.get_instance)) -> list[User]:
     return await users.get_all()
 
-@router.get("/{id}_get_user_account", response_model=UserAccount)
+
+@router.get("/{id}_get_user_account", response_model=User)
 async def get_by_id(id: str,
                     users: Users = Depends(Users.get_instance)) -> Any:
     if not ObjectId.is_valid(id):
@@ -32,11 +34,17 @@ async def get_by_id(id: str,
     #memcached_client.add(id, student)
     return user
 
+# Поиск пользователя по его имени
+@router.get("/users", response_model=list[User])
+async def find_user_by_name(name: str,
+                            search_db: MessageSearchRepository = Depends(MessageSearchRepository.get_instance)):
+    return await search_db.get_by_name(name)
+
 @router.get("/get_all_messages")
-async def get_all_messages(messages: Messages = Depends(Messages.get_instance)) -> list[Message]:
+async def get_all_messages(messages: Messages = Depends(Messages.get_instance)) -> list[Tweet]:
     return await messages.get_all()
 
-@router.get("/{id}_get_message", response_model=Message)
+@router.get("/{id}_get_message", response_model=Tweet)
 async def get_by_id(id: str,
                     messages: Messages = Depends(Messages.get_instance)) -> Any:
     if not ObjectId.is_valid(id):
@@ -50,18 +58,23 @@ async def get_by_id(id: str,
     #memcached_client.add(id, message)
     return message
 
+# Добавление пользователя в бд ElasticSearch
 @router.post("/post_UserAccount")
-async def post_user_account(data: UserAccount,
+async def post_user_account(data: User,
                             users: Users = Depends(Users.get_instance)) -> str:
     user_id = await users.post_user_account(data)
+    await searchdb_repo.create_user(user_id, data)
     return user_id
 
+# Добавлено создание твита в ElasticSearch. data - это текст твита
 @router.post("/post_Message")
-async def post_message(data: Message,
+async def post_message(data: Tweet,
                         messages: Messages = Depends(Messages.get_instance)) -> str:
     message_id = await messages.post_message(data)
+    await searchdb_repo.create_message(message_id, data)
     return message_id
 
+# Добавлено удаление из БД Elastic
 @router.delete("/{id}")
 async def remove_user(id: str, users: Users = Depends(Users.get_instance)) -> Response:
     if not ObjectId.is_valid(id):
@@ -69,12 +82,12 @@ async def remove_user(id: str, users: Users = Depends(Users.get_instance)) -> Re
     user = await users.delete(id)
     if user is None:
         return Response(status_code=status.HTTP_404_NOT_FOUND)
-    #await search_repository.delete(id)
+    await searchdb_repo.delete_user(id)
     return Response()
 
-@router.put("/{id}_user", response_model=UserAccount)
-async def update_user_account(id: str, data: UserAccount, 
-                            users: Users = Depends(Users.get_instance)) -> Any:
+@router.put("/{id}_user", response_model=User)
+async def update_user_account(id: str, data: User,
+                              users: Users = Depends(Users.get_instance)) -> Any:
     if not ObjectId.is_valid(id):
         return Response(status_code=status.HTTP_400_BAD_REQUEST)
     user = await users.update(id, data)
@@ -83,15 +96,40 @@ async def update_user_account(id: str, data: UserAccount,
     return user
 
 
-@router.put("/{id}_message", response_model=Message)
-async def update_message(id: str, data: Message, 
-                            messages: Messages = Depends(Messages.get_instance)) -> Any:
+@router.put("/{id}_message", response_model=Tweet)
+async def update_message(id: str, data: Tweet,
+                         messages: Messages = Depends(Messages.get_instance)) -> Any:
     if not ObjectId.is_valid(id):
         return Response(status_code=status.HTTP_400_BAD_REQUEST)
     message = await messages.update(id, data)
     if message is None:
         return Response(status_code=status.HTTP_404_NOT_FOUND)
     return message
+
+# Поиск твита конкретного пользователя
+@router.get("/users/{user_id}/tweets/search", response_model=list[Tweet])
+async def find_tweet(pattern: str, user_id: str,
+                     search_db: MessageSearchRepository = Depends(MessageSearchRepository.get_instance)):
+    if not ObjectId.is_valid(user_id):
+        return Response(status_code=status.HTTP_400_BAD_REQUEST)
+    return await search_db.find_tweet(user_id, pattern)
+
+# Посик твитов конкретного пользователя за последний час и день
+# Тут нужно быть аккуратным с директориями
+@router.get("/users/{user_id}/tweets/search", response_model=list[Tweet])
+async def find_tweet_hour(user_id: str,
+                          search_db: MessageSearchRepository = Depends(MessageSearchRepository.get_instance)):
+    if not ObjectId.is_valid(user_id):
+        return Response(status_code=status.HTTP_400_BAD_REQUEST)
+    return await search_db.search_last_hour(user_id)
+
+@router.get("/users/{user_id}/tweets/search", response_model=list[Tweet])
+async def find_tweet_day(user_id: str,
+                         search_db: MessageSearchRepository = Depends(MessageSearchRepository.get_instance)):
+    if not ObjectId.is_valid(user_id):
+        return Response(status_code=status.HTTP_400_BAD_REQUEST)
+    return await search_db.search_last_day(user_id)
+
 
 
 '''

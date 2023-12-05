@@ -13,26 +13,26 @@ class Users:
     def __init__(self, db_collection: AsyncIOMotorCollection):
         self._db_collection = db_collection
 
-    async def get_all(self) -> list[UserAccount]:
+    async def get_all(self) -> list[User]:
         db_users = []
         async for user in self._db_collection.find():
             db_users.append(map_users_id_with_name(user))
         return db_users
 
-    async def get_by_id(self, user_id: str) -> UserAccount | None:
+    async def get_by_id(self, user_id: str) -> User | None:
         print(f'Get user account {user_id} from mongo')
         db_user = await self._db_collection.find_one(get_filter(user_id))
         return map_users_id_with_name(db_user)
     
-    async def post_user_account(self, data: UserAccount) -> str:
+    async def post_user_account(self, data: User) -> str:
         insert_result = await self._db_collection.insert_one(dict(data))
         return str(insert_result.inserted_id)
     
-    async def delete(self, id: str) -> UserAccount | None:
+    async def delete(self, id: str) -> User | None:
         db_user = await self._db_collection.find_one_and_delete(get_filter(id))
         return map_users_id_with_name(db_user)
 
-    async def update(self, id: str, data: UserAccount):
+    async def update(self, id: str, data: User):
         db_user = await self._db_collection.find_one_and_update({"_id": ObjectId(id)}, {"$set": dict(data)})
         return map_users_id_with_name(db_user)
 
@@ -56,22 +56,22 @@ class Messages:
     def __init__(self, db_collection: AsyncIOMotorCollection):
         self._db_collection = db_collection
 
-    async def get_all(self) -> list[Message]:
+    async def get_all(self) -> list[Tweet]:
         db_messages = []
         async for message in self._db_collection.find():
             db_messages.append(map_message_id(message))
         return db_messages
 
-    async def post_message(self, data: Message) -> str:
+    async def post_message(self, data: Tweet) -> str:
         insert_result = await self._db_collection.insert_one(dict(data))
         return str(insert_result.inserted_id)
 
-    async def get_by_id(self, message_id: str) -> UserAccount | None:
+    async def get_by_id(self, message_id: str) -> User | None:
         print(f'Get message {message_id} from mongo')
         db_message = await self._db_collection.find_one(get_filter(message_id))
         return map_message_id(db_message)
 
-    async def update(self, id: str, data: Message):
+    async def update(self, id: str, data: Tweet):
         db_message = await self._db_collection.find_one_and_update({"_id": ObjectId(id)}, {"$set": dict(data)})
         return map_message_id(db_message)
 

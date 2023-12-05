@@ -146,7 +146,7 @@ class MessageSearchRepository():
         return tweets
 
     # Есть сомнения в типе данных doc(user)
-    async def create_user(self, user_id: str, user: UserUpdate):
+    async def create_user(self, user_id: str, user: User):
         await elasticsearch_client.create(index=self._elasticsearch_users_index, id=user_id, doc=user)
 
     async def update_user(self, user_id: str, user: UserUpdate):

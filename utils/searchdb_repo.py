@@ -1,9 +1,10 @@
 import os
+from datetime import datetime, timedelta
 
 from elasticsearch import AsyncElasticsearch
-from fastapi import Depends
+#from fastapi import Depends
 
-from utils.elasticsearch_utils import elasticsearch_client
+from elasticsearch_utils import elasticsearch_client
 from models.user import User, UserUpdate
 from models.message import Tweet
 
@@ -92,6 +93,56 @@ class MessageSearchRepository():
                                               user_id=tweet['_source']['user_id'],
                                               text=tweet['_source']['text'],
                                               post_date=tweet['_source']['post_date']), result))
+        return tweets
+
+    async def search_last_day(self, user_id: str) -> list[Tweet]:
+        time_before = datetime.now() - timedelta(hours=1)
+        time_before = str(time_before)
+
+        query = {'bool': {'must': [{'match': {"user_id": {"query": user_id}}}],
+                          'filter': [
+                                  {"range": {
+                                      "created_time": {
+                                          "gte": {time_before}}}}]
+                              }
+                     }
+        response = await elasticsearch_client.search(index=self._elasticsearch_messages_index,
+                                                     query=query,
+                                                     filter_path=['hits.hits._id', 'hits.hits._source'])
+
+        if 'hits' not in response.body:
+            return []
+        result = response.body['hits']['hits']
+        tweets = list(map(lambda tweet: Tweet(id=tweet['_id'],
+                                              user_id=tweet['_source']['user_id'],
+                                              text=tweet['_source']['text'],
+                                              created_time=tweet['_source']['created_time'],
+                                              created_date=tweet['_source']['created_date']), result))
+        return tweets
+
+    async def search_last_hour(self, user_id: str) -> list[Tweet]:
+        time_before = datetime.now() - timedelta(hours=1)
+        time_before = str(time_before)
+
+        query = {'bool': {'must': [{'match': {"user_id": {"query": user_id}}}],
+                          'filter': [
+                              {"range": {
+                                  "created_time": {
+                                      "gte": {time_before}}}}]
+                          }
+                 }
+        response = await elasticsearch_client.search(index=self._elasticsearch_messages_index,
+                                                     query=query,
+                                                     filter_path=['hits.hits._id', 'hits.hits._source'])
+
+        if 'hits' not in response.body:
+            return []
+        result = response.body['hits']['hits']
+        tweets = list(map(lambda tweet: Tweet(id=tweet['_id'],
+                                              user_id=tweet['_source']['user_id'],
+                                              text=tweet['_source']['text'],
+                                              created_time=tweet['_source']['created_time'],
+                                              created_date=tweet['_source']['created_date']), result))
         return tweets
 
     # Есть сомнения в типе данных doc(user)

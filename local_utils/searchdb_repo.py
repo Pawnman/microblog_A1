@@ -2,23 +2,32 @@ import os
 from datetime import datetime, timedelta
 
 from elasticsearch import AsyncElasticsearch
-#from fastapi import Depends
+from fastapi import Depends
 
-from elasticsearch_utils import elasticsearch_client
+from .elasticsearch_utils import elasticsearch_client, get_elasticsearch_client
 from models.user import User, UserUpdate
 from models.message import Tweet
 
 
-class UserSearchRepository:
+class UserSearchRepository: # delete
     _elasticsearch_client: AsyncElasticsearch
     _elasticsearch_users_index: str
     _elasticsearch_messages_index: str
 
 
-class MessageSearchRepository():
-    def __init__(self):
-        self._elasticsearch_users_index = os.getenv('ELASTICSEARCH_USER_INDEX')
-        self._elasticsearch_messages_index = os.getenv('ELASTICSEARCH_MESSAGE_INDEX')
+class MessageSearchRepository(): #rename SearchRepository
+    _elasticsearch_client: AsyncElasticsearch
+    _elasticsearch_users_index: str
+    _elasticsearch_messages_index: str
+
+    def __init__(self, index_users: str, index_messages: str, client: AsyncElasticsearch):
+        self._elasticsearch_client = client
+        self._elasticsearch_users_index = index_users
+        self._elasticsearch_messages_index = index_messages
+
+#    def __init__(self):
+#        self._elasticsearch_users_index = os.getenv('ELASTICSEARCH_USER_INDEX')
+#        self._elasticsearch_messages_index = os.getenv('ELASTICSEARCH_MESSAGE_INDEX')
 
     # def __init__(self,
     #              elasticsearch_index: str,
@@ -158,8 +167,14 @@ class MessageSearchRepository():
     async def create_message(self, tweet_id: str, message: Tweet):
         await elasticsearch_client.create(index=self._elasticsearch_messages_index, id=tweet_id,
                                           doc=message)
-    @staticmethod
-    def get_instance():
+   # @staticmethod
+   # def get_instance():
         # elasticsearch_user_index = os.getenv('ELASTICSEARCH_USER_INDEX')
         # elasticsearch_messages_index = os.getenv('ELASTICSEARCH_MESSAGE_INDEX')
-        return MessageSearchRepository()
+       #return MessageSearchRepository()
+
+    @staticmethod
+    def get_instance(client: AsyncElasticsearch = Depends(get_elasticsearch_client)):
+        elasticsearch_user_index = os.getenv('ELASTICSEARCH_USER_INDEX')
+        elasticsearch_messages_index = os.getenv('ELASTICSEARCH_MESSAGE_INDEX')
+        return MessageSearchRepository(elasticsearch_user_index, elasticsearch_messages_index, client)

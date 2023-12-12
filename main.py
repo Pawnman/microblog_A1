@@ -10,6 +10,7 @@ load_dotenv()
 
 app = FastAPI()
 app.include_router(router)
+
 app.add_event_handler("startup", startup)
 app.add_event_handler("shutdown", shutdown)
 

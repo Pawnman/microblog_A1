@@ -2,7 +2,7 @@ import asyncio
 #from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorCollection
 #from cache.memcached_utils import connect_and_init_memcached, close_memcached_connect
 from db import connect_and_init_mongo, close_mongo_connect
-from utils.elasticsearch_utils import connect_and_init_elasticsearch, close_connection_elasticsearch
+from local_utils.elasticsearch_utils import connect_and_init_elasticsearch, close_connection_elasticsearch
 
 # Запуск приложения
 async def startup():
@@ -11,9 +11,7 @@ async def startup():
 
     #Одновременный запуск mongodb и elasticsearch
     await asyncio.gather(connect_and_init_mongo(), connect_and_init_elasticsearch())
-    # Запуск кэша
     #connect_and_init_memcached()
-
 
 # Выключение приложения
 async def shutdown():
@@ -22,5 +20,4 @@ async def shutdown():
 
     # Одновременный шутдаун mongodb и elasticsearch
     await asyncio.gather(close_mongo_connect(), close_connection_elasticsearch())
-    # Отлючение кэша
     #close_memcached_connect()

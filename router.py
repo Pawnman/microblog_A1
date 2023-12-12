@@ -8,12 +8,10 @@ from models.message import Tweet
 
 #from cache.memcached_utils import get_memcached_client
 from repository import Users, Messages
-from searchdb_repo import UserSearchRepository
-
-#from student import Student, UpdateStudentModel
+from local_utils.searchdb_repo import *
+from local_utils.searchdb_repo import UserSearchRepository, MessageSearchRepository
 
 router = APIRouter()
-
 
 @router.get("/get_all_users")
 async def get_all_users(users: Users = Depends(Users.get_instance)) -> list[User]:
@@ -58,23 +56,26 @@ async def get_by_id(id: str,
     #memcached_client.add(id, message)
     return message
 
-# Добавление пользователя в бд ElasticSearch
 @router.post("/post_UserAccount")
 async def post_user_account(data: User,
-                            users: Users = Depends(Users.get_instance)) -> str:
+                            users: Users = Depends(Users.get_instance),
+                            messages_elsearch: MessageSearchRepository = Depends(MessageSearchRepository.get_instance) #WTF???
+                            ) -> str:
     user_id = await users.post_user_account(data)
-    await searchdb_repo.create_user(user_id, data)
+    await messages_elsearch.create_user(user_id, data)
+    #await local_utils.searchdb_repo.create_user(user_id, data)
     return user_id
 
-# Добавлено создание твита в ElasticSearch. data - это текст твита
 @router.post("/post_Message")
 async def post_message(data: Tweet,
-                        messages: Messages = Depends(Messages.get_instance)) -> str:
+                        messages: Messages = Depends(Messages.get_instance),
+                        messages_elsearch: MessageSearchRepository = Depends(MessageSearchRepository.get_instance)
+                        ) -> str:
     message_id = await messages.post_message(data)
-    await searchdb_repo.create_message(message_id, data)
+    #await local_utils.searchdb_repo.create_message(message_id, data)
+    await messages_elsearch.create_message(message_id, data)
     return message_id
 
-# Добавлено удаление из БД Elastic
 @router.delete("/{id}")
 async def remove_user(id: str, users: Users = Depends(Users.get_instance)) -> Response:
     if not ObjectId.is_valid(id):
@@ -82,7 +83,8 @@ async def remove_user(id: str, users: Users = Depends(Users.get_instance)) -> Re
     user = await users.delete(id)
     if user is None:
         return Response(status_code=status.HTTP_404_NOT_FOUND)
-    await searchdb_repo.delete_user(id)
+    #await local_utils.searchdb_repo.delete_user(id)
+    await delete_user(id)
     return Response()
 
 @router.put("/{id}_user", response_model=User)
@@ -133,6 +135,19 @@ async def find_tweet_day(user_id: str,
 
 
 '''
+@router.put("/{id1}_{id2}_Follow")
+async def follow(id1: str, id2: str):
+    q.follow(id1, id2)
+
+@router.put("/{id1}_{id2}_Unfollow")
+async def unfollow(id1:str, id2: str):
+    q.unfollow(id1, id2)
+    
+@router.put("/{id}_Ban")
+async def ban(id: str, state: bool = False):
+    q.ban(id, state) 
+
+
 @router.delete("/{id}_delete_tweet")
 async def delete_tweet(id: str, messages: Messages = Depends(Messages.get_instance)) -> Response:
     q.delete_tweet(id)

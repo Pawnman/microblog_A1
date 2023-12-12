@@ -2,7 +2,7 @@ from typing import Any
 from bson import ObjectId
 from models.message import Tweet
 from models.user import User
-from utils.elasticsearch_utils import connect_and_init_elasticsearch, close_connection_elasticsearch
+from local_utils.elasticsearch_utils import connect_and_init_elasticsearch, close_connection_elasticsearch
 
 ## TODO объединить
 

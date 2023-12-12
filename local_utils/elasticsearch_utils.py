@@ -5,6 +5,7 @@ elasticsearch_client: AsyncElasticsearch = None
 
 
 def get_elasticsearch_client() -> AsyncElasticsearch:
+    print(elasticsearch_client)
     return elasticsearch_client
 
 
@@ -17,6 +18,9 @@ async def connect_and_init_elasticsearch():
         elasticsearch_client = AsyncElasticsearch(elasticsearch_uri.split(','))
         await elasticsearch_client.info()
         print(f'Connected to elasticsearch with uri: {elasticsearch_uri}', flush=True)
+
+        print(elasticsearch_client)
+
     except Exception as ex:
         print(f'Cant connect to elasticsearch: {ex}', flush=True)
 

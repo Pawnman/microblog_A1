@@ -3,13 +3,14 @@ from pydantic import BaseModel
 
 # Вынести подписчиков в отдельный класс?
 class User(BaseModel):
-    id: str
+    #id: str #delete
     name: str
     age: int
     email: str
     created_at: str = str(datetime.datetime.now()).split(' ')[0]
     followers: list
     following: list = []
+    active: bool = True
 
 class UserUpdate(BaseModel):
     name: str

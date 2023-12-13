@@ -13,12 +13,25 @@ from local_utils.searchdb_repo import UserSearchRepository, MessageSearchReposit
 
 router = APIRouter()
 
+'''
+user.update: update model use
+following / un
+ban
+("/{id}_{text}_tweet")
+("/{id}_Update_account")
+ 
+"/{id}_Update_message")
+'''
+
+
+
+
 @router.get("/get_all_users")
 async def get_all_users(users: Users = Depends(Users.get_instance)) -> list[User]:
     return await users.get_all()
 
 
-@router.get("/{id}_get_user_account", response_model=User)
+@router.get("/get_user_account_by_id/{id}", response_model=User)
 async def get_by_id(id: str,
                     users: Users = Depends(Users.get_instance)) -> Any:
     if not ObjectId.is_valid(id):
@@ -32,11 +45,14 @@ async def get_by_id(id: str,
     #memcached_client.add(id, student)
     return user
 
-# Поиск пользователя по его имени
-@router.get("/users", response_model=list[User])
+@router.get("/get_users_by_name", response_model=list[User])
 async def find_user_by_name(name: str,
-                            search_db: MessageSearchRepository = Depends(MessageSearchRepository.get_instance)):
-    return await search_db.get_by_name(name)
+                            search_db: MessageSearchRepository = 
+                                Depends(MessageSearchRepository.get_instance)):
+    user_list = await search_db.get_by_name(name)
+    return user_list
+
+ #get_user_by_email   
 
 @router.get("/get_all_messages")
 async def get_all_messages(messages: Messages = Depends(Messages.get_instance)) -> list[Tweet]:
@@ -56,17 +72,17 @@ async def get_by_id(id: str,
     #memcached_client.add(id, message)
     return message
 
-@router.post("/post_UserAccount")
+@router.post("/post_user_account")
 async def post_user_account(data: User,
                             users: Users = Depends(Users.get_instance),
-                            messages_elsearch: MessageSearchRepository = Depends(MessageSearchRepository.get_instance) #WTF???
+                            messages_elsearch: MessageSearchRepository =
+                                Depends(MessageSearchRepository.get_instance)
                             ) -> str:
     user_id = await users.post_user_account(data)
     await messages_elsearch.create_user(user_id, data)
-    #await local_utils.searchdb_repo.create_user(user_id, data)
     return user_id
 
-@router.post("/post_Message")
+@router.post("/post_message")#2
 async def post_message(data: Tweet,
                         messages: Messages = Depends(Messages.get_instance),
                         messages_elsearch: MessageSearchRepository = Depends(MessageSearchRepository.get_instance)
@@ -76,15 +92,16 @@ async def post_message(data: Tweet,
     await messages_elsearch.create_message(message_id, data)
     return message_id
 
-@router.delete("/{id}")
-async def remove_user(id: str, users: Users = Depends(Users.get_instance)) -> Response:
+@router.delete("/delete_user_by_id/{id}")
+async def remove_user(id: str, users: Users = Depends(Users.get_instance),
+                         messages_elsearch: MessageSearchRepository =
+                                Depends(MessageSearchRepository.get_instance)) -> Response:
     if not ObjectId.is_valid(id):
         return Response(status_code=status.HTTP_400_BAD_REQUEST)
     user = await users.delete(id)
     if user is None:
         return Response(status_code=status.HTTP_404_NOT_FOUND)
-    #await local_utils.searchdb_repo.delete_user(id)
-    await delete_user(id)
+    await messages_elsearch.delete_user(id)
     return Response()
 
 @router.put("/{id}_user", response_model=User)

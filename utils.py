@@ -25,11 +25,13 @@ def map_message_id(message: Any) -> Tweet | None:
 def get_filter(id: str) -> dict:
     return {'_id': ObjectId(id)}
 
+#delete
 # Запуск MongoDB и ElasticSearch при запуске приложения
 async def handle_startup():
     await connect_and_init_mongo()
     await connect_and_init_elasticsearch()
 
+#delete
 # Закрытие MongoDB и ElasticSearch при закрытии приложения
 async def handle_shutdown():
     await close_mongo_connect()

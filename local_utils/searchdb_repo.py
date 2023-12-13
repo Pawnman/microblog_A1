@@ -14,6 +14,18 @@ class UserSearchRepository: # delete
     _elasticsearch_users_index: str
     _elasticsearch_messages_index: str
 
+#get_by_name OK without followers/folowing 1
+#get_by_email without followers/folowing 2!
+#find_tweet 
+#search_last_day
+#search_last_hour
+#create_user OK 1
+#update_user - after routing and mongo
+#delete_user 1
+#create_message OK 
+#sync for mongo???????
+
+#folowers - following - after routing and mongo
 
 class MessageSearchRepository(): #rename SearchRepository
     _elasticsearch_client: AsyncElasticsearch
@@ -25,59 +37,52 @@ class MessageSearchRepository(): #rename SearchRepository
         self._elasticsearch_users_index = index_users
         self._elasticsearch_messages_index = index_messages
 
-        print(f'INIT messages index: {self._elasticsearch_messages_index}')
-
-#    def __init__(self):
-#        self._elasticsearch_users_index = os.getenv('ELASTICSEARCH_USER_INDEX')
-#        self._elasticsearch_messages_index = os.getenv('ELASTICSEARCH_MESSAGE_INDEX')
-
-    # def __init__(self,
-    #              elasticsearch_index: str,
-    #              elasticsearch_client: AsyncElasticsearch):
-    #     self._elasticsearch_index = elasticsearch_index
-    #     self._elasticsearch_client = elasticsearch_client
-
     async def get_by_name(self, name: str) -> list[User]:
+        index_exist = await self._elasticsearch_client.indices.exists(index=self._elasticsearch_users_index)
+        if not index_exist:
+            return []
+
         query = {
-            "match":
-                {
-                    "name":
-                        {
+            "match": {
+                    "name": {
                             "query": name
                         }
                 }
         }
         response = await self._elasticsearch_client.search(index=self._elasticsearch_users_index,
-                                                     query=query,
-                                                     filter_path=['hits.hits._id', 'hits.hits._source'])
+                                                            query=query,
+                                                            filter_path=['hits.hits._id', 'hits.hits._source'])
         if 'hits' not in response.body:
             return []
+
         result = response.body['hits']['hits']
         users = list(map(lambda user: User(id=user['_id'],
-                                           name=user['_source']['name'],
-                                           age=user['_source']['age'],
-                                           email=user['_source']['email'],
-                                           creaated_at=user['_source']['created_at'],
-                                           ), result))
+                                            name=user['_source']['name'],
+                                            age=user['_source']['age'],
+                                            email=user['_source']['email'],
+                                            creaated_at=user['_source']['created_at'],
+                                        ), result))
         return users
 
-    async def get_by_email(self, email: str) -> list[User]:
+    async def get_by_email(self, email: str) -> list[User]: #testing
+        index_exist = await self._elasticsearch_client.indices.exists(index=self._elasticsearch_users_index)
+        if not index_exist:
+            return []
+            
         query = {
-            "match":
-                {
-                    "username":
-                     {
+            "match": {
+                    "username": {
                          "query": email
                      }
                 }
         }
         response = await self._elasticsearch_client.search(index=self._elasticsearch_users_index,
-                                                     query=query,
-                                                     filter_path=['hits.hits._id', 'hits.hits._source'])
+                                                            query=query,
+                                                            filter_path=['hits.hits._id', 'hits.hits._source'])
         if 'hits' not in response.body:
             return []
-        result = response.body['hits']['hits']
 
+        result = response.body['hits']['hits']
         users = list(map(lambda user: User(id=user['_id'],
                                            name=user['_source']['name'],
                                            age=user['_source']['age'],
@@ -86,12 +91,18 @@ class MessageSearchRepository(): #rename SearchRepository
                                            ), result))
         return users
 
-    async def find_tweet(self, user_id: str, pattern: str) -> list[Tweet]:
+    async def find_tweet(self, user_id: str, pattern: str) -> list[Tweet]: #testing
+        index_exist = await self._elasticsearch_client.indices.exists(index=self._elasticsearch_messages_index)
+        if not index_exist:
+            return []
+
         query = {'bool': {'must': [
             {'bool': {'should': [
                 {'bool':
-                     {'must': [{"match": {"user_id": {"query": user_id}}},
-                     {"match": {"content.text_content": {"query": pattern}}}]}
+                     {'must': [
+                        {"match": {"user_id": {"query": user_id}}},
+                     {"match": {"content.text_content": {"query": pattern}}}
+                     ]}
                 }]}}]}}
 
         response = await self._elasticsearch_client.search(index=self._elasticsearch_messages_index,
@@ -156,30 +167,21 @@ class MessageSearchRepository(): #rename SearchRepository
                                               created_date=tweet['_source']['created_date']), result))
         return tweets
 
-    # Есть сомнения в типе данных doc(user)
     async def create_user(self, user_id: str, user: User):
-        print(f'user index: {self._elasticsearch_users_index}')
         await self._elasticsearch_client.create(index=self._elasticsearch_users_index, id=user_id, document=dict(user))
 
     async def update_user(self, user_id: str, user: UserUpdate):
-        await self._elasticsearch_client.update(index=self._elasticsearch_users_index, id=user_id, doc=dict(user))
+        await self._elasticsearch_client.update(index=self._elasticsearch_users_index, id=user_id, doc=dict(user)) #testing
 
     async def delete_user(self, user_id: str):
-        await self._elasticsearch_client.delete(index=self._elasticsearch_users_index, id=user_id)
+        await self._elasticsearch_client.delete(index=self._elasticsearch_users_index, id=user_id)  #testing
 
     async def create_message(self, tweet_id: str, message: Tweet):
-        print(f'messages index: {self._elasticsearch_messages_index}')
         await self._elasticsearch_client.create(index=self._elasticsearch_messages_index, id=tweet_id,
                                           document=dict(message))
-   # @staticmethod
-   # def get_instance():
-        # elasticsearch_user_index = os.getenv('ELASTICSEARCH_USER_INDEX')
-        # elasticsearch_messages_index = os.getenv('ELASTICSEARCH_MESSAGE_INDEX')
-       #return MessageSearchRepository()
 
     @staticmethod
     def get_instance(client: AsyncElasticsearch = Depends(get_elasticsearch_client)):
         elasticsearch_user_index = os.getenv('ELASTICSEARCH_USER_INDEX')
         elasticsearch_messages_index = os.getenv('ELASTICSEARCH_MESSAGE_INDEX')
-        print(f'get_instance messages index: {elasticsearch_messages_index}')
         return MessageSearchRepository(elasticsearch_user_index, elasticsearch_messages_index, client)

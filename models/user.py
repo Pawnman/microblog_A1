@@ -3,7 +3,7 @@ from pydantic import BaseModel
 
 # Вынести подписчиков в отдельный класс?
 class User(BaseModel):
-    #id: str #delete
+    id: str #delete
     name: str
     age: int
     email: str

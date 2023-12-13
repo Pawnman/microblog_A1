@@ -25,6 +25,8 @@ class MessageSearchRepository(): #rename SearchRepository
         self._elasticsearch_users_index = index_users
         self._elasticsearch_messages_index = index_messages
 
+        print(f'INIT messages index: {self._elasticsearch_messages_index}')
+
 #    def __init__(self):
 #        self._elasticsearch_users_index = os.getenv('ELASTICSEARCH_USER_INDEX')
 #        self._elasticsearch_messages_index = os.getenv('ELASTICSEARCH_MESSAGE_INDEX')
@@ -45,7 +47,7 @@ class MessageSearchRepository(): #rename SearchRepository
                         }
                 }
         }
-        response = await elasticsearch_client.search(index=self._elasticsearch_users_index,
+        response = await self._elasticsearch_client.search(index=self._elasticsearch_users_index,
                                                      query=query,
                                                      filter_path=['hits.hits._id', 'hits.hits._source'])
         if 'hits' not in response.body:
@@ -69,7 +71,7 @@ class MessageSearchRepository(): #rename SearchRepository
                      }
                 }
         }
-        response = await elasticsearch_client.search(index=self._elasticsearch_users_index,
+        response = await self._elasticsearch_client.search(index=self._elasticsearch_users_index,
                                                      query=query,
                                                      filter_path=['hits.hits._id', 'hits.hits._source'])
         if 'hits' not in response.body:
@@ -92,7 +94,7 @@ class MessageSearchRepository(): #rename SearchRepository
                      {"match": {"content.text_content": {"query": pattern}}}]}
                 }]}}]}}
 
-        response = await elasticsearch_client.search(index=self._elasticsearch_messages_index,
+        response = await self._elasticsearch_client.search(index=self._elasticsearch_messages_index,
                                                      query=query,
                                                      filter_path=['hits.hits._id', 'hits.hits._source'])
         if 'hits' not in response.body:
@@ -115,7 +117,7 @@ class MessageSearchRepository(): #rename SearchRepository
                                           "gte": {time_before}}}}]
                               }
                      }
-        response = await elasticsearch_client.search(index=self._elasticsearch_messages_index,
+        response = await self._elasticsearch_client.search(index=self._elasticsearch_messages_index,
                                                      query=query,
                                                      filter_path=['hits.hits._id', 'hits.hits._source'])
 
@@ -140,7 +142,7 @@ class MessageSearchRepository(): #rename SearchRepository
                                       "gte": {time_before}}}}]
                           }
                  }
-        response = await elasticsearch_client.search(index=self._elasticsearch_messages_index,
+        response = await self._elasticsearch_client.search(index=self._elasticsearch_messages_index,
                                                      query=query,
                                                      filter_path=['hits.hits._id', 'hits.hits._source'])
 
@@ -156,17 +158,19 @@ class MessageSearchRepository(): #rename SearchRepository
 
     # Есть сомнения в типе данных doc(user)
     async def create_user(self, user_id: str, user: User):
-        await elasticsearch_client.create(index=self._elasticsearch_users_index, id=user_id, doc=user)
+        print(f'user index: {self._elasticsearch_users_index}')
+        await self._elasticsearch_client.create(index=self._elasticsearch_users_index, id=user_id, document=dict(user))
 
     async def update_user(self, user_id: str, user: UserUpdate):
-        await elasticsearch_client.update(index=self._elasticsearch_users_index, id=user_id, doc=user)
+        await self._elasticsearch_client.update(index=self._elasticsearch_users_index, id=user_id, doc=dict(user))
 
     async def delete_user(self, user_id: str):
-        await elasticsearch_client.delete(index=self._elasticsearch_users_index, id=user_id)
+        await self._elasticsearch_client.delete(index=self._elasticsearch_users_index, id=user_id)
 
     async def create_message(self, tweet_id: str, message: Tweet):
-        await elasticsearch_client.create(index=self._elasticsearch_messages_index, id=tweet_id,
-                                          doc=message)
+        print(f'messages index: {self._elasticsearch_messages_index}')
+        await self._elasticsearch_client.create(index=self._elasticsearch_messages_index, id=tweet_id,
+                                          document=dict(message))
    # @staticmethod
    # def get_instance():
         # elasticsearch_user_index = os.getenv('ELASTICSEARCH_USER_INDEX')
@@ -177,4 +181,5 @@ class MessageSearchRepository(): #rename SearchRepository
     def get_instance(client: AsyncElasticsearch = Depends(get_elasticsearch_client)):
         elasticsearch_user_index = os.getenv('ELASTICSEARCH_USER_INDEX')
         elasticsearch_messages_index = os.getenv('ELASTICSEARCH_MESSAGE_INDEX')
+        print(f'get_instance messages index: {elasticsearch_messages_index}')
         return MessageSearchRepository(elasticsearch_user_index, elasticsearch_messages_index, client)

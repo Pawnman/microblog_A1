@@ -190,7 +190,7 @@ async def update_tweet(id: str, data: Tweet,
 #id1 подписывается на id2
 @router.put("/follow/{id1}/to/{id2}")
 async def follow(id1: str, id2: str, users: Users = Depends(Users.get_instance),
-                search_db: MessageSearchRepository =
+                            search_db: MessageSearchRepository =
                                 Depends(MessageSearchRepository.get_instance)) -> Response:
     if id1 == id2:
         return Response(status_code=status.HTTP_400_BAD_REQUEST)
@@ -212,7 +212,7 @@ async def follow(id1: str, id2: str, users: Users = Depends(Users.get_instance),
 #id1 отписывается от id2
 @router.put("/unfollow/{id1}/from/{id2}")
 async def unfollow(id1: str, id2: str, users: Users = Depends(Users.get_instance),
-                search_db: MessageSearchRepository =
+                            search_db: MessageSearchRepository =
                                 Depends(MessageSearchRepository.get_instance)) -> Response:
     if not ObjectId.is_valid(id1) and  not ObjectId.is_valid(id2):
         return Response(status_code=status.HTTP_400_BAD_REQUEST)
@@ -229,67 +229,19 @@ async def unfollow(id1: str, id2: str, users: Users = Depends(Users.get_instance
     return Response()
     
     
-#@router.put("/ban/{user_id}")
-#async def ban(id: str, state: bool = False) -> Response:
-    
+@router.put("/ban/{user_id}")
+async def ban(user_id: str, state: bool = False,
+                            users: Users = Depends(Users.get_instance),
+                            search_db: MessageSearchRepository =
+                                Depends(MessageSearchRepository.get_instance)) -> Response:
+    if not ObjectId.is_valid(user_id):
+        return Response(status_code=status.HTTP_400_BAD_REQUEST)
+    user = await users.get_by_id(user_id)
+    if user is None:
+        return Response(status_code=status.HTTP_404_NOT_FOUND)
+    update_user = await users.ban(user_id, user, state)
+    if update_user is None:
+        return Response(status_code=status.HTTP_404_NOT_FOUND)
 
-
-'''from fastapi import APIRouter
-from typing import Optional
-from Classes import UserAccount, Message
-#import queries as q
-
-router = APIRouter()
-
-@router.get("/get_all_messages")
-async def get_all_users(repository: Repository = Depends(Repository.get_instance)) -> list[UserAccount]:
-    return await repository.get_all()
-
-@router.get("/get_collection")
-async def get_collection(collection_name: str) -> list[Optional[dict]]:
-    return q.get_collection(collection_name)
-
-@router.get("/{id}_get_document")
-async def get_document(id: str, collection_name: str) -> Optional[dict]:
-    return q.get_document(id, collection_name)
-        
-@router.post("/post_UserAccount")
-async def post_UserAccount(data: UserAccount):
-    q.post_UserAccount(data)
-
-@router.post("/post_Message")
-async def post_Message(data: Message):
-    q.post_Message(data)
-   
-@router.post("/{id}_{text}_tweet")
-async def tweet(id: str,text: str):
-    q.tweet(id, text)
-
-@router.put("/{id}_Update_account")
-async def update_UserAccount(id: str, data: UserAccount):
-    q.update_UserAccount(id, data)
- 
-@router.put("/{id}_Update_message")
-async def update_Message(id: str, data: Message):
-    q.update_Message(id, data)
-
-@router.put("/{id1}_{id2}_Follow")
-async def follow(id1: str, id2: str):
-    q.follow(id1, id2)
-
-@router.put("/{id1}_{id2}_Unfollow")
-async def unfollow(id1:str, id2: str):
-    q.unfollow(id1, id2)
-    
-@router.put("/{id}_Ban")
-async def ban(id: str, state: bool = False):
-    q.ban(id, state) 
-    
-@router.delete("/{id}")
-async def delete_document(id:str, collection_name: str):
-    q.delete_document(id, collection_name)
-
-@router.delete("/{id}_delete_tweet")
-async def delete_tweet(id: str):
-    q.delete_tweet(id)
-'''
+    #elastic
+    return Response()

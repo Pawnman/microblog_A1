@@ -32,10 +32,6 @@ class Users:
     async def delete(self, id: str) -> User | None:
         db_user = await self._db_collection.find_one_and_delete(get_filter(id))
         return map_users_id_with_name(db_user)
-  
-    '''async def update_followers(self, user_id: str, user: UpdateFollowers) -> User | None: 
-        db_user = await self._db_collection.find_one_and_replace(get_filter(user_id), dict(user))
-        return map_users_id_with_name(db_user)'''
 
     async def update(self, user_id: str, user: User) -> User | None: 
         db_user = await self._db_collection.find_one_and_replace(get_filter(user_id), dict(user))
@@ -48,6 +44,8 @@ class Users:
         print(f'user followers before.. {user.followers}')
         print(f'following_user following before.. {following_user.following}')
         print(f'following_user followers before.. {following_user.followers}')
+        if (user.following.find(following_user_id)):
+            return False
         user.following.append(following_user_id)
         following_user.followers.append(user_id)
         
@@ -76,30 +74,15 @@ class Users:
         if update_user is None or update_following_user is None:
             return False
         return True
+
+    async def ban(self, user_id: str, user: User, state: bool) -> User | None:
+        user.active = state
+        return await self.update(user_id, user)
         
     @staticmethod
     def get_instance(db_collection: AsyncIOMotorCollection = Depends(get_db_users_collection)):
         return Users(db_collection)
-        
-def ban(id: str, state: bool = False):
-    user = get_document(id, "UserAccount")
-    if user["active"] != state:
-        user["active"] = state
-        update_UserAccount(id, UserAccount(**user)) 
-    else:
-        raise Exception("User is already inactive")
-
-'''
-    async def update(self, id: str, data: User):
-        db_user = await self._db_collection.find_one_and_update({"_id": ObjectId(id)}, {"$set": dict(data)})
-        return map_users_id_with_name(db_user)
-      
-def update_UserAccount(id: str, data: UserAccount):
-    db["UserAccount"].find_one_and_update({"_id": ObjectId(id)}, {"$set": dict(data)})
- 
-def update_Message(id: str, data: Message):
-    db["Messages"].find_one_and_update({"_id": ObjectId(id)}, {"$set": dict(data)})
-'''
+    
 
 class Messages:
     _db_collection: AsyncIOMotorCollection

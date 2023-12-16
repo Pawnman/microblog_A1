@@ -14,21 +14,6 @@ class UserSearchRepository: # delete
     _elasticsearch_users_index: str
     _elasticsearch_messages_index: str
 
-#get_by_name OK without followers/folowing 1 ok
-#get_by_email without followers/folowing 2!
-#find_tweet     2
-#search_last_day  2
-#search_last_hour   2
-#create_user OK 1 ok
-#update_user - after routing and mongo 3
-#delete_user 1 ok
-#create_message OK  2
-#delete_message 2
-#sync for mongo???????
-
-#folowers - following - after routing and mongo 3
-#ban-unban 3
-
 class MessageSearchRepository(): #rename SearchRepository
     _elasticsearch_client: AsyncElasticsearch
     _elasticsearch_users_index: str
@@ -62,7 +47,7 @@ class MessageSearchRepository(): #rename SearchRepository
                                         ), result))
         return users
 
-    # у пользователя всегда уникальный email, иначе не получится создать аккаунт. Нужен ли для этого эластик??
+    # у пользователя всегда уникальный email, иначе не получится создать аккаунт. НПроследить за точностью
     async def get_by_email(self, email: str) -> list[User]: #testing
         index_exist = await self._elasticsearch_client.indices.exists(index=self._elasticsearch_users_index)
         if not index_exist:
@@ -88,16 +73,18 @@ class MessageSearchRepository(): #rename SearchRepository
         return user
 
     async def find_tweet(self, user_id: str, pattern: str) -> list[Tweet]: #testing
-        index_exist = await self._elasticsearch_client.indices.exists(index=self._elasticsearch_messages_index)
+        index_exist = await self._elasticsearch_client.indices.exists(
+                                                        index=self._elasticsearch_messages_index)
         if not index_exist:
             return []
         query = {'bool': {'must': [
                         {'bool': {'should': [
                                 {'bool': {'must': [
                                     {"match": {"user_id": {"query": user_id}}},
-                                    {"match": {"content.text_content": {"query": pattern}}}
+                                    {"match": {"text": {"query": pattern,
+                                                        "fuzziness": 2,
+                                                        "prefix_length": 1}}}
                 ]}}]}}]}}
-
         response = await self._elasticsearch_client.search(index=self._elasticsearch_messages_index,
                                                     query=query,
                                                     filter_path=['hits.hits._id', 'hits.hits._source'])
@@ -112,15 +99,15 @@ class MessageSearchRepository(): #rename SearchRepository
                                             ), result))
         return tweets
 
-    async def search_tweet_last_day(self, user_id: str) -> list[Tweet]: #так себе решение
-        #delta_date = str(datetime.now() - timedelta(day=1)).split(' ')[0]
-        delta_date = str(datetime.now() - timedelta(days=1))
+    async def search_tweet_last_day(self, user_id: str) -> list[Tweet]:
+        delta_date = str(datetime.now() - timedelta(days=1)).split(' ')[0]
+        #delta_date = str(datetime.now() - timedelta(days=1))
         print(delta_date)
 
         query = {'bool': {'must': [
                         {'match': {"user_id": {"query": user_id}}}],
                         'filter': [
-                                  {"range": {"created_date": {"gte": {delta_date}}}}]
+                                  {"range": {"created_date": {"gte": delta_date}}}]
                 }}
         response = await self._elasticsearch_client.search(index=self._elasticsearch_messages_index,
                                                      query=query,
@@ -144,7 +131,7 @@ class MessageSearchRepository(): #rename SearchRepository
         query = {'bool': {'must': [
                             {'match': {"user_id": {"query": user_id}}}],
                             'filter': [
-                                    {"range": { "created_time": { "gte": {delta_time}}}}]
+                                    {"range": { "created_time": { "gte": delta_time}}}]
                 }}
         response = await self._elasticsearch_client.search(index=self._elasticsearch_messages_index,
                                                      query=query,

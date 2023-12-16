@@ -126,12 +126,13 @@ class MessageSearchRepository(): #rename SearchRepository
 
     async def search_tweet_last_hour(self, user_id: str) -> list[Tweet]:
         delta_time = str(datetime.now() - timedelta(hours=1)).split(' ')[1]
+        #time_before = datetime.now() - timedelta(hours=1)
         print(delta_time)
 
         query = {'bool': {'must': [
                             {'match': {"user_id": {"query": user_id}}}],
                             'filter': [
-                                    {"range": { "created_time": { "gte": {delta_time}}}}]
+                                    {"range": { "created_time": { "gte": delta_time}}}]
                 }}
         response = await self._elasticsearch_client.search(index=self._elasticsearch_messages_index,
                                                      query=query,

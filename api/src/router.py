@@ -6,10 +6,13 @@ from starlette.responses import Response
 from models.user import User
 from models.message import Tweet
 
-#from cache.memcached_utils import get_memcached_client
+from pymemcache import HashClient
+from memcached import get_memcached_user_client, get_memcached_message_client
 from repository import Users, Messages
 from local_utils.searchdb_repo import *
 from local_utils.searchdb_repo import UserSearchRepository, MessageSearchRepository
+
+
 
 router = APIRouter()
 
@@ -31,15 +34,19 @@ ban
 async def get_all_users(users: Users = Depends(Users.get_instance)) -> list[User]:
     return await users.get_all()
 
-
+# Внесены дополнения с кэшированием
 @router.get("/get_user_account_by_id/{id}", response_model=User)
 async def get_by_id(id: str,
-                    users: Users = Depends(Users.get_instance)) -> Any:
+                    users: Users = Depends(Users.get_instance),
+                    memcached_user_client: HashClient = Depends(get_memcached_user_client)) -> Any:
     if not ObjectId.is_valid(id):
         return Response(status_code=status.HTTP_400_BAD_REQUEST)
-    #student = memcached_client.get(id)
-    #if student is not None:
-        #return student
+    
+    user = memcached_user_client.get(id)
+    if user is not None:
+        print('using cached user data', flush=True)
+        return user
+    
     user = await users.get_by_id(id)
     if user is None:
         return Response(status_code=status.HTTP_404_NOT_FOUND)
@@ -96,8 +103,9 @@ async def find_tweet(pattern: str, user_id: str,
 # Поиск твитов конкретного пользователя за последний час и день
 @router.get("/get_tweet_for_last_hour/{user_id}", response_model=list[Tweet])
 async def find_tweet_hour(user_id: str,
-                        search_db: MessageSearchRepository =
-                            Depends(MessageSearchRepository.get_instance)):
+                          search_db: MessageSearchRepository =
+                            Depends(MessageSearchRepository.get_instance),
+                          memcached_message_client: ):
     if not ObjectId.is_valid(user_id):
         return Response(status_code=status.HTTP_400_BAD_REQUEST)
     return await search_db.search_tweet_last_hour(user_id)

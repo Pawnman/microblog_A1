@@ -47,7 +47,7 @@ class MessageSearchRepository(): #rename SearchRepository
                                         ), result))
         return users
 
-    # у пользователя всегда уникальный email, иначе не получится создать аккаунт. Нужен ли для этого эластик??
+    # у пользователя всегда уникальный email, иначе не получится создать аккаунт. НПроследить за точностью
     async def get_by_email(self, email: str) -> list[User]: #testing
         index_exist = await self._elasticsearch_client.indices.exists(index=self._elasticsearch_users_index)
         if not index_exist:
@@ -99,7 +99,7 @@ class MessageSearchRepository(): #rename SearchRepository
                                             ), result))
         return tweets
 
-    async def search_tweet_last_day(self, user_id: str) -> list[Tweet]: #так себе решение
+    async def search_tweet_last_day(self, user_id: str) -> list[Tweet]:
         delta_date = str(datetime.now() - timedelta(days=1)).split(' ')[0]
         #delta_date = str(datetime.now() - timedelta(days=1))
         print(delta_date)

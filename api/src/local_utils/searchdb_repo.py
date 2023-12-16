@@ -44,11 +44,9 @@ class MessageSearchRepository(): #rename SearchRepository
         if not index_exist:
             return []
 
-        query = {
-            "match": {
-                    "name": {
-                            "query": name
-                }}}
+        query = { "match": {
+                    "name": {"query": name}}
+                }
         response = await self._elasticsearch_client.search(index=self._elasticsearch_users_index,
                                                             query=query,
                                                             filter_path=['hits.hits._id', 'hits.hits._source'])
@@ -70,11 +68,9 @@ class MessageSearchRepository(): #rename SearchRepository
         if not index_exist:
             return []
             
-        query = {
-            "match": {
-                    "email": {
-                         "query": email
-                }}}
+        query = { "match": {
+                    "email": {"query": email}}
+                }
         response = await self._elasticsearch_client.search(index=self._elasticsearch_users_index,
                                                             query=query,
                                                             filter_path=['hits.hits._id', 'hits.hits._source'])
@@ -100,7 +96,7 @@ class MessageSearchRepository(): #rename SearchRepository
                                 {'bool': {'must': [
                                     {"match": {"user_id": {"query": user_id}}},
                                     {"match": {"content.text_content": {"query": pattern}}}
-                     ]}}]}}]}}
+                ]}}]}}]}}
 
         response = await self._elasticsearch_client.search(index=self._elasticsearch_messages_index,
                                                     query=query,
@@ -166,10 +162,12 @@ class MessageSearchRepository(): #rename SearchRepository
         return tweets
 
     async def create_user(self, user_id: str, user: User):
-        await self._elasticsearch_client.create(index=self._elasticsearch_users_index, id=user_id, document=dict(user))
+        await self._elasticsearch_client.create(index=self._elasticsearch_users_index,
+                                                                    id=user_id, document=dict(user))
 
     async def update_user(self, user_id: str, user: UserUpdate):
-        await self._elasticsearch_client.update(index=self._elasticsearch_users_index, id=user_id, doc=dict(user)) #testing
+        await self._elasticsearch_client.update(index=self._elasticsearch_users_index,
+                                                                    id=user_id, doc=dict(user)) #testing
 
     async def delete_user(self, user_id: str):
         await self._elasticsearch_client.delete(index=self._elasticsearch_users_index, id=user_id)  #testing

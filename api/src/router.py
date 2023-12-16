@@ -85,8 +85,6 @@ async def get_by_id(id: str,
     #memcached_client.add(id, message)
     return message
 
-# Поиск твита конкретного сообщения
-#@router.get("/users/{user_id}/tweets/search", response_model=list[Tweet])
 @router.get("/get_tweets_by_pattern/{user_id}", response_model=list[Tweet])
 async def find_tweet(pattern: str, user_id: str,
                     search_db: MessageSearchRepository =
@@ -96,7 +94,6 @@ async def find_tweet(pattern: str, user_id: str,
     return await search_db.find_tweet(user_id, pattern)
 
 # Поиск твитов конкретного пользователя за последний час и день
-#@router.get("/users/{user_id}/tweets/search", response_model=list[Tweet])
 @router.get("/get_tweet_for_last_hour/{user_id}", response_model=list[Tweet])
 async def find_tweet_hour(user_id: str,
                         search_db: MessageSearchRepository =
@@ -105,7 +102,6 @@ async def find_tweet_hour(user_id: str,
         return Response(status_code=status.HTTP_400_BAD_REQUEST)
     return await search_db.search_tweet_last_hour(user_id)
 
-#@router.get("/users/{user_id}/tweets/search", response_model=list[Tweet])
 @router.get("/get_tweet_for_last_day/{user_id}", response_model=list[Tweet])
 async def find_tweet_day(user_id: str,
                         search_db: MessageSearchRepository =
@@ -115,7 +111,7 @@ async def find_tweet_day(user_id: str,
     return await search_db.search_tweet_last_day(user_id)
 
 
-@router.post("/post_user_account")#2
+@router.post("/post_user_account")
 async def post_user_account(data: User,
                             users: Users = Depends(Users.get_instance),
                             search_db: MessageSearchRepository =
@@ -123,7 +119,7 @@ async def post_user_account(data: User,
                             ) -> str:
     emails = await search_db.get_by_email(data.email)
     print(emails)
-    if (emails != []): #await????
+    if (emails != []):
         return Response(status_code=status.HTTP_400_BAD_REQUEST)
                             
     user_id = await users.post_user_account(data)
@@ -153,8 +149,9 @@ async def remove_user(user_id: str, users: Users = Depends(Users.get_instance),
     return Response()
 
 @router.delete("/delete_tweet_by_id/{message_id}")
-async def remove_user(message_id: str, users: Users = Depends(Users.get_instance),
-                         search_db: MessageSearchRepository =
+async def remove_user(message_id: str, 
+                            messages: Messages = Depends(Messages.get_instance),
+                            search_db: MessageSearchRepository =
                                 Depends(MessageSearchRepository.get_instance)) -> Response:
     if not ObjectId.is_valid(message_id):
         return Response(status_code=status.HTTP_400_BAD_REQUEST)
@@ -164,7 +161,7 @@ async def remove_user(message_id: str, users: Users = Depends(Users.get_instance
     await search_db.delete_message(message_id)
     return Response()
 
-@router.put("/update_user_account/{id}", response_model=User)
+@router.put("/update_user_account/{id}", response_model=User) #!!!!!!!! add elastic add UserUpdate
 async def update_user_account(id: str, data: User,
                             users: Users = Depends(Users.get_instance),
                             search_db: MessageSearchRepository =
@@ -176,7 +173,8 @@ async def update_user_account(id: str, data: User,
         return Response(status_code=status.HTTP_404_NOT_FOUND)
     return user
 
-
+''''
+#воможно позже, пока без обновления соообщений
 @router.put("/update_tweet{id}", response_model=Tweet)
 async def update_tweet(id: str, data: Tweet,
                         messages: Messages = Depends(Messages.get_instance),
@@ -188,35 +186,52 @@ async def update_tweet(id: str, data: Tweet,
     if message is None:
         return Response(status_code=status.HTTP_404_NOT_FOUND)
     return message
-
-
-
-
 '''
-@router.put("/{id1}_{id2}_Follow")
-async def follow(id1: str, id2: str):
-    q.follow(id1, id2)
+#id1 подписывается на id2
+@router.put("/follow/{id1}/to/{id2}")
+async def follow(id1: str, id2: str, users: Users = Depends(Users.get_instance),
+                search_db: MessageSearchRepository =
+                                Depends(MessageSearchRepository.get_instance)) -> Response:
+    if id1 == id2:
+        return Response(status_code=status.HTTP_400_BAD_REQUEST)
+    if not ObjectId.is_valid(id1) and  not ObjectId.is_valid(id2):
+        return Response(status_code=status.HTTP_400_BAD_REQUEST)
 
-@router.put("/{id1}_{id2}_Unfollow")
-async def unfollow(id1:str, id2: str):
-    q.unfollow(id1, id2)
+    user1 = await users.get_by_id(id1)
+    user2 = await users.get_by_id(id2)
+    if user1 is None or user2 is None:
+        return Response(status_code=status.HTTP_404_NOT_FOUND)
+    sucsess = await users.follow(id1, user1, id2, user2)
+    if sucsess is False:
+        return Response(status_code=status.HTTP_520_UNKNOWN_ERROR)
+
+
+    #elastic
+    return Response()
+
+#id1 отписывается от id2
+@router.put("/unfollow/{id1}/from/{id2}")
+async def unfollow(id1: str, id2: str, users: Users = Depends(Users.get_instance),
+                search_db: MessageSearchRepository =
+                                Depends(MessageSearchRepository.get_instance)) -> Response:
+    if not ObjectId.is_valid(id1) and  not ObjectId.is_valid(id2):
+        return Response(status_code=status.HTTP_400_BAD_REQUEST)
+    user1 = await users.get_by_id(id1)
+    user2 = await users.get_by_id(id2)
+    if user1 is None or user2 is None:
+        return Response(status_code=status.HTTP_404_NOT_FOUND)
+    sucsess = await users.unfollow(id1, user1, id2, user2)
+    if sucsess is False:
+        return Response(status_code=status.HTTP_520_UNKNOWN_ERROR)
+
+
+    #elastic
+    return Response()
     
-@router.put("/{id}_Ban")
-async def ban(id: str, state: bool = False):
-    q.ban(id, state) 
-
-
-@router.delete("/{id}_delete_tweet")
-async def delete_tweet(id: str, messages: Messages = Depends(Messages.get_instance)) -> Response:
-    q.delete_tweet(id)
-
-'''
-
-''''
-@router.get("/get_all_messages")
-async def get_all_users(repository: Repository = Depends(Repository.get_instance)) -> list[UserAccount]:
-    return await repository.get_all()
-    '''
+    
+#@router.put("/ban/{user_id}")
+#async def ban(id: str, state: bool = False) -> Response:
+    
 
 
 '''from fastapi import APIRouter
@@ -226,6 +241,9 @@ from Classes import UserAccount, Message
 
 router = APIRouter()
 
+@router.get("/get_all_messages")
+async def get_all_users(repository: Repository = Depends(Repository.get_instance)) -> list[UserAccount]:
+    return await repository.get_all()
 
 @router.get("/get_collection")
 async def get_collection(collection_name: str) -> list[Optional[dict]]:

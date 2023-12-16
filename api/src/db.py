@@ -24,7 +24,6 @@ async def connect_and_init_mongo():
         db_client = AsyncIOMotorClient(mongo_uri)
         await db_client.server_info()
         print(f'Connected to mongo with uri {mongo_uri}')
-        print(db_client.list_database_names())
         if mongo_db not in await db_client.list_database_names():
             await db_client.get_database(mongo_db).create_collection(mongo_users_collection)
             await db_client.get_database(mongo_db).create_collection(mongo_messages_collection)

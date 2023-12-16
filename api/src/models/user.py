@@ -1,7 +1,6 @@
 import datetime
 from pydantic import BaseModel
 
-# Вынести подписчиков в отдельный класс?
 class User(BaseModel):
     #id: str #delete
     name: str = ""
@@ -12,9 +11,16 @@ class User(BaseModel):
     following: list = []
     active: bool = True
 
-class UserUpdate(BaseModel):
+class UserUpdate(BaseModel): #delete ????
     name: str = ""
-    email: str = ""
+    #email: str = ""
     followers: list = []
     following: list = []
 
+
+class UpdateUserName(BaseModel):
+    name: str = ""
+
+class UpdateFollowers(BaseModel):
+    followers: list = []
+    following: list = []

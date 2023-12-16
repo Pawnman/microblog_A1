@@ -1,7 +1,8 @@
 import xml.etree.ElementTree as ET
 import secrets
 from pymongo import MongoClient
-from models import Classes
+from models.message import Tweet
+from models.user import User
 
 CONNECTION_STRING = "mongodb://localhost:27017"
 client = MongoClient(CONNECTION_STRING)
@@ -17,14 +18,14 @@ users_id = {}
 
 def import_user_accounts():
     collection = db["UserAccount"]
-    for event, elem in ET.iterparse("data\\xml\\Users.xml"):
+    for event, elem in ET.iterparse(r"api\src\data\xml\Users (1).xml"):
         rec = elem.attrib
-        user_account = Classes.UserAccount()
+        user_account = User()
         try:
             account_id  = rec["Id"]
             user_account.name =  rec["DisplayName"]
             user_account.email = email_generator()
-            user_account.password = password_generator()
+            #user_account.password = password_generator()
             user_account.created_at = rec["CreationDate"]
         except KeyError:
             print("Key from Users Not Found.")
@@ -34,15 +35,15 @@ def import_user_accounts():
 
 def import_messages():
     collection = db["Messages"]
-    for event, elem in ET.iterparse("data\\xml\\Posts.xml"):
+    for event, elem in ET.iterparse(r"api\src\data\xml\Posts.xml"):
         rec = elem.attrib
-        message = Classes.Message()
+        message = Tweet()
         try:
             if rec["PostTypeId"] == '1':
                 account_id = rec["OwnerUserId"]
                 message.user_id = users_id[account_id]
-                message.message = rec["Body"]
-                message.created_at = rec["CreationDate"]
+                message.text = rec["Body"]
+                message.created_date = rec["CreationDate"]
                 collection.insert_one(dict(message))
         except KeyError:
             print("Key from Posts Not Found.")

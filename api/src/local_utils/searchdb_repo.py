@@ -100,14 +100,14 @@ class MessageSearchRepository(): #rename SearchRepository
         return tweets
 
     async def search_tweet_last_day(self, user_id: str) -> list[Tweet]: #так себе решение
-        #delta_date = str(datetime.now() - timedelta(day=1)).split(' ')[0]
-        delta_date = str(datetime.now() - timedelta(days=1))
+        delta_date = str(datetime.now() - timedelta(days=1)).split(' ')[0]
+        #delta_date = str(datetime.now() - timedelta(days=1))
         print(delta_date)
 
         query = {'bool': {'must': [
                         {'match': {"user_id": {"query": user_id}}}],
                         'filter': [
-                                  {"range": {"created_date": {"gte": {delta_date}}}}]
+                                  {"range": {"created_date": {"gte": delta_date}}}]
                 }}
         response = await self._elasticsearch_client.search(index=self._elasticsearch_messages_index,
                                                      query=query,
@@ -126,7 +126,6 @@ class MessageSearchRepository(): #rename SearchRepository
 
     async def search_tweet_last_hour(self, user_id: str) -> list[Tweet]:
         delta_time = str(datetime.now() - timedelta(hours=1)).split(' ')[1]
-        #time_before = datetime.now() - timedelta(hours=1)
         print(delta_time)
 
         query = {'bool': {'must': [

@@ -16,20 +16,6 @@ from local_utils.searchdb_repo import UserSearchRepository, MessageSearchReposit
 
 router = APIRouter()
 
-'''
-post user 2
-user.update: update model use
-following / un
-ban
-("/{id}_{text}_tweet")
-("/{id}_Update_account")
- 
-"/{id}_Update_message")
-'''
-
-
-
-
 @router.get("/get_all_users")
 async def get_all_users(users: Users = Depends(Users.get_instance)) -> list[User]:
     return await users.get_all()

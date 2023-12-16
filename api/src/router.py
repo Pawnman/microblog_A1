@@ -100,14 +100,24 @@ async def find_tweet(pattern: str, user_id: str,
         return Response(status_code=status.HTTP_400_BAD_REQUEST)
     return await search_db.find_tweet(user_id, pattern)
 
+# Внесенны корректировки с кэшированием
 # Поиск твитов конкретного пользователя за последний час и день
 @router.get("/get_tweet_for_last_hour/{user_id}", response_model=list[Tweet])
 async def find_tweet_hour(user_id: str,
                           search_db: MessageSearchRepository =
                             Depends(MessageSearchRepository.get_instance),
-                          memcached_message_client: ):
+                          memcached_message_client: Messages = Depends(get_memcached_message_client)):
     if not ObjectId.is_valid(user_id):
         return Response(status_code=status.HTTP_400_BAD_REQUEST)
+    
+    messages = memcached_message_client.get(user_id)
+    if messages is not None:
+        print('Using cached message data', flush='True')
+        return messages
+    messages = await search_db.get_by_id(user_id)
+    
+    return messages
+        
     return await search_db.search_tweet_last_hour(user_id)
 
 @router.get("/get_tweet_for_last_day/{user_id}", response_model=list[Tweet])

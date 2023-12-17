@@ -7,7 +7,7 @@ from models.user import User
 from models.message import Tweet
 
 from pymemcache import HashClient
-from memcached import get_memcached_user_client, get_memcached_message_client
+from memcache import get_memcached_user_client, get_memcached_message_client
 from repository import Users, Messages
 from local_utils.searchdb_repo import *
 from local_utils.searchdb_repo import UserSearchRepository, MessageSearchRepository

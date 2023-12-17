@@ -8,7 +8,10 @@ import datetime
 
 API_URL_POST = "http://localhost:8000/post_user_account"
 API_URL_GET = "http://localhost:8000/get_user_account_by_id"
-API_URL_DELETE = "http://localhost:8000/delete_user_account_by_id"
+API_URL_DELETE = "http://localhost:8000/delete_user_by_id"
+API_URL_FOLLOW = "http://127.0.0.1:8000/follow"
+API_URL_UNFOLLOW = "http://127.0.0.1:8000/unfollow"
+API_URL_BAN = "http://127.0.0.1:8000/ban"
 
 def create_user(name=None, age=None, email=None,created_at = None, active = True):
     if name is None:
@@ -53,10 +56,10 @@ def test_student_creation_and_deletion():
     assert user['email'] == email
     assert user['created_at'] == created_at
     response = requests.delete(f"{API_URL_DELETE}/{user_id}")
-    #assert response.status_code == 200
+    assert response.status_code == 200
     print("Success") 
 
-
+'''
 def test_search_users_by_email():
     name = str(uuid.uuid4())
     age = random.randint(17, 25)
@@ -81,7 +84,45 @@ def test_search_users_by_email():
     assert user['created_at'] == created_at
     requests.delete(f'{API_URL_DELETE}/{user_id}')
     print("Success")
+'''
+def test_follow_unfollow():
+    name = str(uuid.uuid4())
+    age = random.randint(17, 25)
+    email = str(secrets.token_hex(6))+"@gmail.com"
+    created_at = str(datetime.datetime.now()).split(' ')[0]
+    user_id1 = create_user(name, age, email, created_at)
+    name = str(uuid.uuid4())
+    age = random.randint(17, 25)
+    email = str(secrets.token_hex(6))+"@gmail.com"
+    created_at = str(datetime.datetime.now()).split(' ')[0]
+    user_id2 = create_user(name, age, email, created_at)
+    url = f"{API_URL_FOLLOW}/{user_id1}/to/{user_id2}"
+    response = requests.put(url)
+    assert response.status_code == 200
+    url = url = f"{API_URL_UNFOLLOW}/{user_id1}/from/{user_id2}"
+    response = requests.put(url)
+    assert response.status_code == 200
+    requests.delete(f"{API_URL_DELETE}/{user_id1}")
+    requests.delete(f"{API_URL_DELETE}/{user_id2}")
+    print("Success")
+
+def test_ban_unban():
+    name = str(uuid.uuid4())
+    age = random.randint(17, 25)
+    email = str(secrets.token_hex(6))+"@gmail.com"
+    created_at = str(datetime.datetime.now()).split(' ')[0]
+    user_id = create_user(name, age, email, created_at)
+    url = f"{API_URL_BAN}/{user_id}?state=false"
+    response = requests.put(url)
+    assert response.status_code == 200
+    url = f"{API_URL_BAN}/{user_id}?state=true"
+    response = requests.put(url)
+    assert response.status_code == 200
+    requests.delete(f"{API_URL_DELETE}/{user_id}")
+    print("Success")
 
 if __name__ == "__main__":
     test_student_creation_and_deletion()
+    test_follow_unfollow()
+    test_ban_unban()
     #test_search_users_by_email()

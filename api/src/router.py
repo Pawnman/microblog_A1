@@ -47,7 +47,7 @@ async def find_user_by_name(name: str,
 async def get_user_by_email(email: str,
                             search_db: MessageSearchRepository = 
                                 Depends(MessageSearchRepository.get_instance)):
-    user_list = await search_db.get_by_email(email)
+    user = await search_db.get_by_email(email)
     if user == []:
         return Response(status_code=status.HTTP_404_NOT_FOUND)
     print(f'user: {user}')
@@ -112,7 +112,7 @@ async def post_user_account(data: User,
     await search_db.create_user(user_id, data)
     return user_id
 
-@router.post("/post_tweet")#2
+@router.post("/post_tweet")
 async def post_message(data: Tweet,
                         messages: Messages = Depends(Messages.get_instance),
                         search_db: MessageSearchRepository =
@@ -141,8 +141,8 @@ async def remove_user(message_id: str,
                                 Depends(MessageSearchRepository.get_instance)) -> Response:
     if not ObjectId.is_valid(message_id):
         return Response(status_code=status.HTTP_400_BAD_REQUEST)
-    user = await users.delete(message_id)
-    if user is None:
+    message_id_result = await messages.delete(message_id)
+    if message_id_result is None:
         return Response(status_code=status.HTTP_404_NOT_FOUND)
     await search_db.delete_message(message_id)
     return Response()

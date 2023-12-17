@@ -7,7 +7,7 @@ from models.user import User
 from models.message import Tweet
 
 from pymemcache import HashClient
-from memcached import get_memcached_user_client, get_memcached_message_client
+from memcache import get_memcached_user_client, get_memcached_message_client
 from repository import Users, Messages
 from local_utils.searchdb_repo import *
 from local_utils.searchdb_repo import UserSearchRepository, MessageSearchRepository
@@ -28,6 +28,7 @@ async def get_by_id(id: str,
     if not ObjectId.is_valid(id):
         return Response(status_code=status.HTTP_400_BAD_REQUEST)
     
+    print(memcached_user_client)
     user = memcached_user_client.get(id)
     if user is not None:
         print('using cached user data', flush=True)
@@ -36,7 +37,8 @@ async def get_by_id(id: str,
     user = await users.get_by_id(id)
     if user is None:
         return Response(status_code=status.HTTP_404_NOT_FOUND)
-    #memcached_client.add(id, student)
+
+    memcached_user_client.add(id, user)
     return user
 
 @router.get("/get_users_by_name", response_model=list[User])

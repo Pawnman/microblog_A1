@@ -19,25 +19,24 @@ router = APIRouter()
 async def get_all_users(users: Users = Depends(Users.get_instance)) -> list[User]:
     return await users.get_all()
 
-#@router.get("/get_user_account_by_id/{id}", response_model=User)
-@router.get("/{id}", response_model=User)
+@router.get("/get_user_account_by_id/{id}", response_model=User)
+#@router.get("/{id}", response_model=User)
 async def get_by_id(id: str,
-                    users: Users = Depends(Users.get_instance),
-                    memcached_client: HashClient = Depends(get_memcached_client)) -> Any:
+                    users: Users = Depends(Users.get_instance)) -> Any:
     if not ObjectId.is_valid(id):
         return Response(status_code=status.HTTP_400_BAD_REQUEST)
     
-    print(memcached_client)
-    user = memcached_client.get(id)
-    if user is not None:
-        print('using cached user data')
-        return user
+    #print(memcached_client)
+    #user = memcached_client.get(id)
+    #if user is not None:
+    #    print('using cached user data')
+    #    return user
     
     user = await users.get_by_id(id)
     if user is None:
         return Response(status_code=status.HTTP_404_NOT_FOUND)
 
-    memcached_client.add(id, user)
+    #memcached_client.add(id, user)
     return user
 
 @router.get("/get_users_by_name", response_model=list[User])
@@ -96,15 +95,18 @@ async def find_tweet_hour(user_id: str,
                           memcached_client: HashClient = Depends(get_memcached_client)):
     if not ObjectId.is_valid(user_id):
         return Response(status_code=status.HTTP_400_BAD_REQUEST)
-    
+
+    print(memcached_client)
     message_cached = memcached_client.get(user_id)
     if message_cached is not None:
         print('Using cached message data')
+        print(message_cached)
         return message_cached
 
     list_tweets = await search_db.search_tweet_last_hour(user_id)
-    for tweet in list_tweets:
-        memcached_client.add(id, tweet)
+    #for tweet in list_tweets:
+    memcached_client.add(user_id, list_tweets)
+    print(list_tweets)
     return list_tweets
 
 @router.get("/get_tweet_for_last_day/{user_id}", response_model=list[Tweet])

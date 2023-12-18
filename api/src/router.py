@@ -6,10 +6,12 @@ from starlette.responses import Response
 from models.user import User
 from models.message import Tweet
 
-#from cache.memcached_utils import get_memcached_client
+from pymemcache import HashClient
+from memcache import get_memcached_client
 from repository import Users, Messages
 from local_utils.searchdb_repo import *
 from local_utils.searchdb_repo import UserSearchRepository, MessageSearchRepository
+
 
 router = APIRouter()
 
@@ -17,19 +19,24 @@ router = APIRouter()
 async def get_all_users(users: Users = Depends(Users.get_instance)) -> list[User]:
     return await users.get_all()
 
-
 @router.get("/get_user_account_by_id/{id}", response_model=User)
 async def get_by_id(id: str,
-                    users: Users = Depends(Users.get_instance)) -> Any:
+                    users: Users = Depends(Users.get_instance),
+                    memcached_client: HashClient = Depends(get_memcached_client)) -> Any:
     if not ObjectId.is_valid(id):
         return Response(status_code=status.HTTP_400_BAD_REQUEST)
-    #student = memcached_client.get(id)
-    #if student is not None:
-        #return student
+    
+    print(memcached_client)
+    user = memcached_client.get(id)
+    if user is not None:
+        print('using cached user data')
+        return user
+    
     user = await users.get_by_id(id)
     if user is None:
         return Response(status_code=status.HTTP_404_NOT_FOUND)
-    #memcached_client.add(id, student)
+
+    memcached_client.add(id, user)
     return user
 
 @router.get("/get_users_by_name", response_model=list[User])
@@ -59,16 +66,20 @@ async def get_all_tweets(messages: Messages = Depends(Messages.get_instance)) ->
 
 @router.get("/get_tweet_by_id/{id}", response_model=Tweet)
 async def get_by_id(id: str,
-                    messages: Messages = Depends(Messages.get_instance)) -> Any:
+                    messages: Messages = Depends(Messages.get_instance),
+                    memcached_client: HashClient = Depends(get_memcached_client)) -> Any:
     if not ObjectId.is_valid(id):
         return Response(status_code=status.HTTP_400_BAD_REQUEST)
-    #messages = memcached_client.get(id)
-    #if messages is not None:
-        #return student
+    
+    message_cached = memcached_client.get(id)
+    if message_cached is not None:
+        print('Using cached message data')
+        return message_cached
+
     message = await messages.get_by_id(id)
     if message is None:
         return Response(status_code=status.HTTP_404_NOT_FOUND)
-    #memcached_client.add(id, message)
+    memcached_client.add(id, message)
     return message
 
 @router.get("/get_tweets_by_pattern/{user_id}", response_model=list[Tweet])
@@ -190,9 +201,6 @@ async def follow(id1: str, id2: str, users: Users = Depends(Users.get_instance),
     sucsess = await users.follow(id1, user1, id2, user2)
     if sucsess is False:
         return Response(status_code=status.HTTP_520_UNKNOWN_ERROR)
-
-
-    #elastic
     return Response()
 
 #id1 отписывается от id2
@@ -209,9 +217,6 @@ async def unfollow(id1: str, id2: str, users: Users = Depends(Users.get_instance
     sucsess = await users.unfollow(id1, user1, id2, user2)
     if sucsess is False:
         return Response(status_code=status.HTTP_520_UNKNOWN_ERROR)
-
-
-    #elastic
     return Response()
     
     
@@ -228,6 +233,4 @@ async def ban(user_id: str, state: bool = False,
     update_user = await users.ban(user_id, user, state)
     if update_user is None:
         return Response(status_code=status.HTTP_404_NOT_FOUND)
-
-    #elastic
     return Response()

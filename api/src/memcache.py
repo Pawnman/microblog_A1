@@ -11,12 +11,12 @@ memcached_message_client: Client = None
 def connection_and_init_memcached():
     global memcached_user_client, memcached_message_client
     memcached_user_uri = os.getenv('MEMCACHED_USER_URI')
-    memcached_message_uri = os.getenv('MEMCACHED_MESSAGE_URI')
+    #memcached_message_uri = os.getenv('MEMCACHED_MESSAGE_URI')
     try:
         memcached_user_client = HashClient(memcached_user_uri.split(','), serde=JsonSerializer())
-        memcached_message_client = HashClient(memcached_message_uri.split(','), serde=JsonSerializer())
+        #memcached_message_client = HashClient(memcached_message_uri.split(','), serde=JsonSerializer())
         print(f'Connected to memcached with uri {memcached_user_uri}')
-        print(f'Connected to memcached with uri {memcached_message_uri}')
+        #print(f'Connected to memcached with uri {memcached_message_uri}')
     except Exception as ex:
         print(f'Cant connect to memcached: {ex}')
 

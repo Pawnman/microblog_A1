@@ -20,8 +20,8 @@ router = APIRouter()
 async def get_all_users(users: Users = Depends(Users.get_instance)) -> list[User]:
     return await users.get_all()
 
-# Внесены дополнения с кэшированием
-@router.get("/get_user_account_by_id/{id}", response_model=User)
+#@router.get("/get_user_account_by_id/{id}", response_model=User)
+@router.get("/{id}", response_model=User)
 async def get_by_id(id: str,
                     users: Users = Depends(Users.get_instance),
                     memcached_user_client: HashClient = Depends(get_memcached_user_client)) -> Any:

@@ -62,10 +62,10 @@ async def get_user_by_email(email: str,
                             search_db: MessageSearchRepository = 
                                 Depends(MessageSearchRepository.get_instance)):
     user_list = await search_db.get_by_email(email)
-    if user == []:
+    if user_list == []:
         return Response(status_code=status.HTTP_404_NOT_FOUND)
-    print(f'user: {user}')
-    return user
+    #print(f'user: {user_list[0]}')
+    return user_list
 
 @router.get("/get_all_tweets")
 async def get_all_tweets(messages: Messages = Depends(Messages.get_instance)) -> list[Tweet]:
@@ -119,8 +119,8 @@ async def post_user_account(data: User,
                             ) -> str:
     emails = await search_db.get_by_email(data.email)
     print(emails)
-    if (emails != []):
-        return Response(status_code=status.HTTP_400_BAD_REQUEST)
+  #  if (emails != []):
+  #      return Response(status_code=status.HTTP_400_BAD_REQUEST)
                             
     user_id = await users.post_user_account(data)
     await search_db.create_user(user_id, data)
@@ -149,13 +149,13 @@ async def remove_user(user_id: str, users: Users = Depends(Users.get_instance),
     return Response()
 
 @router.delete("/delete_tweet_by_id/{message_id}")
-async def remove_user(message_id: str, 
+async def remove_message(message_id: str, 
                             messages: Messages = Depends(Messages.get_instance),
                             search_db: MessageSearchRepository =
                                 Depends(MessageSearchRepository.get_instance)) -> Response:
     if not ObjectId.is_valid(message_id):
         return Response(status_code=status.HTTP_400_BAD_REQUEST)
-    user = await users.delete(message_id)
+    user = await messages.delete(message_id)
     if user is None:
         return Response(status_code=status.HTTP_404_NOT_FOUND)
     await search_db.delete_message(message_id)

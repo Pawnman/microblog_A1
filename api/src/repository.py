@@ -113,6 +113,10 @@ class Messages:
         db_message = await self._db_collection.find_one_and_delete(get_filter(id))
         return map_message_id(db_message)
 
+    async def delete(self, id: str) -> Tweet | None:
+        db_message = await self._db_collection.find_one_and_delete(get_filter(id))
+        return map_message_id(db_message)
+
     @staticmethod
     def get_instance(db_collection: AsyncIOMotorCollection = Depends(get_db_messsages_collection)):
         return Messages(db_collection)

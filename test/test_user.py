@@ -39,7 +39,7 @@ def create_user(name=None, age=None, email=None,created_at = None, active = True
         return None
 
 
-def test_student_creation_and_deletion():
+def test_user_creation_and_deletion():
     name = str(uuid.uuid4())
     age = random.randint(17, 25)
     email = str(secrets.token_hex(6))+"@gmail.com"
@@ -122,7 +122,7 @@ def test_ban_unban():
     print("Success")
 
 if __name__ == "__main__":
-    test_student_creation_and_deletion()
+    test_user_creation_and_deletion()
     test_follow_unfollow()
     test_ban_unban()
     #test_search_users_by_email()

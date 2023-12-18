@@ -19,7 +19,6 @@ router = APIRouter()
 async def get_all_users(users: Users = Depends(Users.get_instance)) -> list[User]:
     return await users.get_all()
 
-#@router.get("/get_user_account_by_id/{id}", response_model=User)
 @router.get("/get_user_account_by_id/{id}", response_model=User)
 async def get_by_id(id: str,
                     users: Users = Depends(Users.get_instance),
@@ -202,9 +201,6 @@ async def follow(id1: str, id2: str, users: Users = Depends(Users.get_instance),
     sucsess = await users.follow(id1, user1, id2, user2)
     if sucsess is False:
         return Response(status_code=status.HTTP_520_UNKNOWN_ERROR)
-
-
-    #elastic
     return Response()
 
 #id1 отписывается от id2
@@ -221,9 +217,6 @@ async def unfollow(id1: str, id2: str, users: Users = Depends(Users.get_instance
     sucsess = await users.unfollow(id1, user1, id2, user2)
     if sucsess is False:
         return Response(status_code=status.HTTP_520_UNKNOWN_ERROR)
-
-
-    #elastic
     return Response()
     
     
@@ -240,6 +233,4 @@ async def ban(user_id: str, state: bool = False,
     update_user = await users.ban(user_id, user, state)
     if update_user is None:
         return Response(status_code=status.HTTP_404_NOT_FOUND)
-
-    #elastic
     return Response()

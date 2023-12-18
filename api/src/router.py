@@ -166,13 +166,9 @@ async def remove_message(message_id: str,
                                 Depends(MessageSearchRepository.get_instance)) -> Response:
     if not ObjectId.is_valid(message_id):
         return Response(status_code=status.HTTP_400_BAD_REQUEST)
-<<<<<<< HEAD
-    user = await messages.delete(message_id)
-    if user is None:
-=======
+
     message_id_result = await messages.delete(message_id)
     if message_id_result is None:
->>>>>>> main
         return Response(status_code=status.HTTP_404_NOT_FOUND)
     await search_db.delete_message(message_id)
     return Response()

@@ -43,7 +43,7 @@ class MessageSearchRepository(): #rename SearchRepository
                                             name=user['_source']['name'],
                                             age=user['_source']['age'],
                                             email=user['_source']['email'],
-                                            creaated_at=user['_source']['created_at'],
+                                            created_at=user['_source']['created_at'],
                                         ), result))
         return users
 
@@ -125,7 +125,7 @@ class MessageSearchRepository(): #rename SearchRepository
         return tweets
 
     async def search_tweet_last_hour(self, user_id: str) -> list[Tweet]:
-        delta_time = str(datetime.now() - timedelta(hours=1)).split(' ')[1]
+        delta_time = str(datetime.now().replace(microsecond=0) - timedelta(hours=1)).split(' ')[1]
         print(delta_time)
 
         query = {'bool': {'must': [

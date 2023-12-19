@@ -3,7 +3,7 @@ import secrets
 from pymongo import MongoClient
 from models.message import Tweet
 from models.user import User
-from elasticsearch import AsyncElasticsearch
+from elasticsearch import Elasticsearch
 import os
 import sys
 import pathlib
@@ -13,16 +13,18 @@ from db import get_db_users_collection, get_db_messsages_collection
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorCollection
 
 sys.path.append(str(pathlib.Path(sys.path[0]).resolve().parent.parent / "data"))
-#CONNECTION_STRING = "mongodb://localhost:27017"
-#ELASTICSEARCH_URI = os.getenv('ELASTICSEARCH_URI')
+CONNECTION_STRING = "mongodb://localhost:27017"
+elasticsearch_uri = "http://localhost:9200"
 #USERS_PATH = r"..\..\..\data\xml\Users.xml"
 USERS_PATH = r"data\xml\Users_demo.xml"
 TWEETS_PATH = r"..\..\..\data\xml\Posts.xml"
 
-#client = MongoClient(CONNECTION_STRING)
-#db = client["microblog"]
-#elasticsearch_uri = os.getenv('ELASTICSEARCH_URI')
-#elasticsearch_client = AsyncElasticsearch(elasticsearch_uri.split(','))
+client = MongoClient(CONNECTION_STRING)
+db = client["microblog"]
+
+elasticsearch_client = Elasticsearch(elasticsearch_uri)
+elasticsearch_users_index = "useraccount"
+elasticsearch_messages_index = os.getenv('ELASTICSEARCH_MESSAGE_INDEX')
 
 def email_generator():
     return f"{secrets.token_hex(8)}@gmail.com"
@@ -30,35 +32,14 @@ def email_generator():
 def password_generator():
     return f"{secrets.token_hex(3)}"
 
+def age_generator():
+    return secrets.randbelow(70)
+
 users_id = {}
 
-async def import_user_accounts():
-    #collection = db["UserAccount"]
-    users_mongo_collection = get_db_users_collection()
-    #users_mongo_collection = Users.get_instance()
-    for event, elem in ET.iterparse(USERS_PATH):
-        rec = elem.attrib
-        user_account = User()
-        try:
-            account_id  = rec["Id"]
-            user_account.name =  rec["DisplayName"]
-            user_account.email = email_generator()
-            #user_account.password = password_generator()
-            user_account.created_at = rec["CreationDate"]
-        except KeyError:
-            print("Key from Users Not Found.")
-            continue
-        #insert_result = await users_mongo_collection.post_user_account(user_account)
-        insert_result = await users_mongo_collection.insert_one(dict(user_account))
-        #users_id[account_id] = str(insert_result.inserted_id)
-        
-    print(f'users_ID: {insert_result}')
 
-
-'''
 def import_user_accounts():
-    #collection = db["UserAccount"]
-    users_mongo_collection = Users.get_db_users_collection()
+    collection = db["UserAccount"]
     for event, elem in ET.iterparse(USERS_PATH):
         rec = elem.attrib
         user_account = User()
@@ -66,14 +47,16 @@ def import_user_accounts():
             account_id  = rec["Id"]
             user_account.name =  rec["DisplayName"]
             user_account.email = email_generator()
+            user_account.age = age_generator()
             #user_account.password = password_generator()
             user_account.created_at = rec["CreationDate"]
         except KeyError:
             print("Key from Users Not Found.")
             continue
-        #insert_result = collection.insert_one(dict(user_account))
+        insert_result = collection.insert_one(dict(user_account))
+        elasticsearch_client.create(index=elasticsearch_users_index, 
+                                    id=str(insert_result.inserted_id), document=dict(user_account))
         users_id[account_id] = str(insert_result.inserted_id)
-        '''
 
 
 def import_messages():

@@ -8,4 +8,4 @@ class Tweet(BaseModel):
     #tweet_id: str
     text: str = ""
     created_date: str = str(datetime.datetime.now()).split(' ')[0]
-    created_time: str = str(datetime.datetime.now()).split(' ')[1]
+    created_time: str = str(datetime.datetime.now())

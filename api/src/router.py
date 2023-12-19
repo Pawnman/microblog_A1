@@ -20,6 +20,7 @@ router = APIRouter()
 async def get_all_users(users: Users = Depends(Users.get_instance)) -> list[User]:
     return await users.get_all()
 
+
 # Внесены дополнения с кэшированием
 @router.get("/get_user_account_by_id/{id}", response_model=User)
 async def get_by_id(id: str,
@@ -38,6 +39,7 @@ async def get_by_id(id: str,
         return Response(status_code=status.HTTP_404_NOT_FOUND)
     #memcached_client.add(id, student)
     return user
+
 
 @router.get("/get_users_by_name", response_model=list[User])
 async def find_user_by_name(name: str,
@@ -64,6 +66,7 @@ async def get_user_by_email(email: str,
 async def get_all_tweets(messages: Messages = Depends(Messages.get_instance)) -> list[Tweet]:
     return await messages.get_all()
 
+
 @router.get("/get_tweet_by_id/{id}", response_model=Tweet)
 async def get_by_id(id: str,
                     messages: Messages = Depends(Messages.get_instance)) -> Any:
@@ -77,6 +80,7 @@ async def get_by_id(id: str,
         return Response(status_code=status.HTTP_404_NOT_FOUND)
     #memcached_client.add(id, message)
     return message
+
 
 @router.get("/get_tweets_by_pattern/{user_id}", response_model=list[Tweet])
 async def find_tweet(pattern: str, user_id: str,
@@ -130,6 +134,7 @@ async def post_user_account(data: User,
     await search_db.create_user(user_id, data)
     return user_id
 
+
 @router.post("/post_tweet")#2
 async def post_message(data: Tweet,
                         messages: Messages = Depends(Messages.get_instance),
@@ -139,6 +144,7 @@ async def post_message(data: Tweet,
     message_id = await messages.post_message(data)
     await search_db.create_message(message_id, data)
     return message_id
+
 
 @router.delete("/delete_user_by_id/{user_id}")
 async def remove_user(user_id: str, users: Users = Depends(Users.get_instance),
@@ -151,6 +157,7 @@ async def remove_user(user_id: str, users: Users = Depends(Users.get_instance),
         return Response(status_code=status.HTTP_404_NOT_FOUND)
     await search_db.delete_user(user_id)
     return Response()
+
 
 @router.delete("/delete_tweet_by_id/{message_id}")
 async def remove_user(message_id: str, 
@@ -191,6 +198,8 @@ async def update_tweet(id: str, data: Tweet,
         return Response(status_code=status.HTTP_404_NOT_FOUND)
     return message
 '''
+
+
 #id1 подписывается на id2
 @router.put("/follow/{id1}/to/{id2}")
 async def follow(id1: str, id2: str, users: Users = Depends(Users.get_instance),
@@ -218,7 +227,7 @@ async def follow(id1: str, id2: str, users: Users = Depends(Users.get_instance),
 async def unfollow(id1: str, id2: str, users: Users = Depends(Users.get_instance),
                             search_db: MessageSearchRepository =
                                 Depends(MessageSearchRepository.get_instance)) -> Response:
-    if not ObjectId.is_valid(id1) and  not ObjectId.is_valid(id2):
+    if not ObjectId.is_valid(id1) and not ObjectId.is_valid(id2):
         return Response(status_code=status.HTTP_400_BAD_REQUEST)
     user1 = await users.get_by_id(id1)
     user2 = await users.get_by_id(id2)

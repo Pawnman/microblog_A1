@@ -8,7 +8,7 @@ import os
 
 CONNECTION_STRING = "mongodb://localhost:27017"
 ELASTICSEARCH_URI = os.getenv('ELASTICSEARCH_URI')
-USERS_PATH = r"...\...\data\xml\Users (1).xml"
+USERS_PATH = r"...\...\data\xml\Users.xml"
 TWEETS_PATH = r"...\...\data\xml\Posts.xml"
 client = MongoClient(CONNECTION_STRING)
 db = client["microblog"]

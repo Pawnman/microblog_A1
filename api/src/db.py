@@ -18,6 +18,7 @@ async def connect_and_init_mongo():
     global db_client
     mongo_uri = os.getenv('MONGO_URI')
     mongo_db = os.getenv('MONGO_DB')
+    print(mongo_uri, mongo_db) 
     mongo_users_collection = os.getenv('MONGO_USERS_COLLECTION')
     mongo_messages_collection = os.getenv('MONGO_MESSAGES_COLLECTION')
     try:

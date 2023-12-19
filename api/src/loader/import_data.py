@@ -17,14 +17,14 @@ CONNECTION_STRING = "mongodb://localhost:27017"
 elasticsearch_uri = "http://localhost:9200"
 #USERS_PATH = r"..\..\..\data\xml\Users.xml"
 USERS_PATH = r"data\xml\Users_demo.xml"
-TWEETS_PATH = r"..\..\..\data\xml\Posts.xml"
+TWEETS_PATH = r"data\xml\Posts_demo.xml"
 
 client = MongoClient(CONNECTION_STRING)
 db = client["microblog"]
 
 elasticsearch_client = Elasticsearch(elasticsearch_uri)
 elasticsearch_users_index = "useraccount"
-elasticsearch_messages_index = os.getenv('ELASTICSEARCH_MESSAGE_INDEX')
+elasticsearch_messages_index = "message"
 
 def email_generator():
     return f"{secrets.token_hex(8)}@gmail.com"
@@ -60,7 +60,7 @@ def import_user_accounts():
 
 
 def import_messages():
-    collection = db["Messages"]
+    collection = db["Message"]
     for event, elem in ET.iterparse(TWEETS_PATH):
         rec = elem.attrib
         message = Tweet()
@@ -70,6 +70,8 @@ def import_messages():
                 message.user_id = users_id[account_id]
                 message.text = rec["Body"]
                 message.created_date = rec["CreationDate"]
-                collection.insert_one(dict(message))
+                insert_result = collection.insert_one(dict(message))
+                elasticsearch_client.create(index=elasticsearch_messages_index, 
+                                    id=str(insert_result.inserted_id), document=dict(message))
         except KeyError:
             print("Key from Posts Not Found.")

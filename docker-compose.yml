@@ -4,7 +4,7 @@ services:
     ports:
       - 8000:8000
     environment:
-      - MONGO_URI=mongodb://mongo_db:27017
+      - MONGO_URI=mongodb://mongo_db:27017 
       - ELASTICSEARCH_URI=http://elasticsearch_db:9200
       - MEMCACHED_URI=memcached_node_01:11211 #,memcached_node_02:11211,memcached_node_03:11211
     depends_on:
@@ -12,6 +12,8 @@ services:
         condition: service_healthy
       mongo_db:
         condition: service_started
+     # memcached_node_01:
+      #  condition: service_healthy
 
   elasticsearch_db:
     image: elasticsearch:8.10.2
@@ -36,6 +38,8 @@ services:
 
   memcached_node_01:
     image: memcached
+    ports:
+      - 11211:11211
 
   #memcached_node_02:
   #  image: memcached

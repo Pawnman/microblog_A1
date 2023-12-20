@@ -1,8 +1,8 @@
 import asyncio
 #from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorCollection
 from memcache import connection_and_init_memcached, close_memcached_connection
-from db import connect_and_init_mongo, close_mongo_connect
-from local_utils.elasticsearch_utils import connect_and_init_elasticsearch, close_connection_elasticsearch
+from mongo_utils import connect_and_init_mongo, close_mongo_connect
+from search_engine.elasticsearch_utils import connect_and_init_elasticsearch, close_connection_elasticsearch
 
 
 async def startup():

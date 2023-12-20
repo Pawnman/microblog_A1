@@ -8,7 +8,7 @@ import os
 import sys
 import pathlib
 from repository import Users, Messages
-from local_utils.searchdb_repo import MessageSearchRepository
+from search_engine.search_repository import MessageSearchRepository
 from db import get_db_users_collection, get_db_messsages_collection
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorCollection
 

@@ -1,13 +1,10 @@
 from fastapi import Depends
 from motor.motor_asyncio import AsyncIOMotorCollection
 
-from db import get_db_users_collection, get_db_messsages_collection
+from mongo_utils import get_db_users_collection, get_db_messsages_collection
 from models.user import User, UpdateFollowers
 from models.message import Tweet, TweetUpdate
-#from student import Student, UpdateStudentModel
 from utils import *
-
-## TODO интерфейсный класс
 
 class Users:
     _db_collection: AsyncIOMotorCollection

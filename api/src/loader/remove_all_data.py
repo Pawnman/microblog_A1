@@ -16,13 +16,13 @@ elasticsearch_messages_index = "message"
 def delete_messages():
     collection = db["Message"]
     collection.drop()
-    elasticsearch_client.delete_by_query(index=elasticsearch_messages_index, body={"query": {"match_all": {}}})
+    #elasticsearch_client.delete_by_query(index=elasticsearch_messages_index, body={"query": {"match_all": {}}})
     
 
 def delete_users():
     collection = db["UserAccount"]
     collection.drop()
-    elasticsearch_client.delete_by_query(index=elasticsearch_users_index, body={"query": {"match_all": {}}})
+    #elasticsearch_client.delete_by_query(index=elasticsearch_users_index, body={"query": {"match_all": {}}})
 
 delete_users()
 delete_messages()

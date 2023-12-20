@@ -69,7 +69,8 @@ def import_messages():
                 account_id = rec["OwnerUserId"]
                 message.user_id = users_id[account_id]
                 message.text = rec["Body"]
-                message.created_date = rec["CreationDate"]
+                message.created_date = rec["CreationDate"].split("T")[0]
+                message.created_time = rec["CreationDate"].split("T")[1]
                 insert_result = collection.insert_one(dict(message))
                 elasticsearch_client.create(index=elasticsearch_messages_index, 
                                     id=str(insert_result.inserted_id), document=dict(message))

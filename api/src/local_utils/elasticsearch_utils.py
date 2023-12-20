@@ -8,7 +8,6 @@ def get_elasticsearch_client() -> AsyncElasticsearch:
     return elasticsearch_client
 
 
-# Запуск ElasticSearch и подключение к порту с проверкой успешности подключения
 async def connect_and_init_elasticsearch():
     global elasticsearch_client
     elasticsearch_uri = os.getenv('ELASTICSEARCH_URI')
@@ -21,7 +20,6 @@ async def connect_and_init_elasticsearch():
         print(f'Cant connect to elasticsearch: {ex}', flush=True)
 
 
-# Закрытие ElasticSearch
 async def close_connection_elasticsearch():
     global elasticsearch_client
     if elasticsearch_client is None:

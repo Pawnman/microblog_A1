@@ -3,30 +3,17 @@ from typing import Any
 from bson import ObjectId
 from fastapi import APIRouter, status, Depends
 from starlette.responses import Response
-from models.user import User
-from models.message import Tweet
+from models.user import User, UserUpdate
+from models.message import Tweet, TweetUpdate
 
 from pymemcache import HashClient
 from memcache import get_memcached_client
 from repository import Users, Messages
 from local_utils.searchdb_repo import *
 from local_utils.searchdb_repo import UserSearchRepository, MessageSearchRepository
-
+from utils import tweet_struct_update, user_struct_update
 
 router = APIRouter()
-
-'''
-post user 2
-user.update: update model use
-following / un
-ban
-("/{id}_{text}_tweet")
-("/{id}_Update_account")
- 
-"/{id}_Update_message")
-'''
-
-
 
 
 @router.get("/get_all_users")
@@ -140,9 +127,19 @@ async def post_user_account(data: User,
 @router.post("/post_tweet")
 async def post_message(data: Tweet,
                         messages: Messages = Depends(Messages.get_instance),
+                        users: Users = Depends(Users.get_instance),
                         search_db: MessageSearchRepository =
                             Depends(MessageSearchRepository.get_instance)
                         ) -> str:
+    
+    if not ObjectId.is_valid(data.user_id):
+        return Response(status_code=status.HTTP_400_BAD_REQUEST)
+    user = await users.get_by_id(data.user_id)
+    if user is None:
+        return Response(status_code=status.HTTP_404_NOT_FOUND)
+    if user.active == False:
+        return Response(status_code=status.HTTP_400_BAD_REQUEST)
+
     message_id = await messages.post_message(data)
     await search_db.create_message(message_id, data)
     return message_id
@@ -173,32 +170,41 @@ async def remove_message(message_id: str,
     await search_db.delete_message(message_id)
     return Response()
 
-@router.put("/update_user_account/{id}", response_model=User) #!!!!!!!! add elastic add UserUpdate
-async def update_user_account(id: str, data: User,
+@router.put("/update_user_account/{id}", response_model=User)
+async def update_user_account(id: str, data: UserUpdate,
                             users: Users = Depends(Users.get_instance),
                             search_db: MessageSearchRepository =
                                 Depends(MessageSearchRepository.get_instance)) -> Any:
     if not ObjectId.is_valid(id):
         return Response(status_code=status.HTTP_400_BAD_REQUEST)
-    user = await users.update(id, data)
+
+    old_user_data = await users.get_by_id(id)
+    new_data: User = user_struct_update(old_user_data, data)
+    user = await users.update(id, new_data)
     if user is None:
         return Response(status_code=status.HTTP_404_NOT_FOUND)
+
+    await search_db.update_user(id, new_data)
     return user
 
-''''
-#воможно позже, пока без обновления соообщений
-@router.put("/update_tweet{id}", response_model=Tweet)
-async def update_tweet(id: str, data: Tweet,
+@router.put("/update_tweet/{id}", response_model=TweetUpdate)
+async def update_tweet(id: str, data: TweetUpdate,
                         messages: Messages = Depends(Messages.get_instance),
                         search_db: MessageSearchRepository =
                                 Depends(MessageSearchRepository.get_instance)) -> Any:
     if not ObjectId.is_valid(id):
         return Response(status_code=status.HTTP_400_BAD_REQUEST)
-    message = await messages.update(id, data)
+
+    old_message = await messages.get_by_id(id)
+    new_data: Tweet = tweet_struct_update(old_message, data)
+    message = await messages.update(id, new_data)
     if message is None:
         return Response(status_code=status.HTTP_404_NOT_FOUND)
+
+    await search_db.update_message(id, new_data)
     return message
-'''
+
+
 #id1 подписывается на id2
 @router.put("/follow/{id1}/to/{id2}")
 async def follow(id1: str, id2: str, users: Users = Depends(Users.get_instance),

@@ -6,7 +6,7 @@ from fastapi import Depends
 
 from .elasticsearch_utils import elasticsearch_client, get_elasticsearch_client
 from models.user import User, UserUpdate
-from models.message import Tweet
+from models.message import Tweet, TweetUpdate
 
 
 class UserSearchRepository: # delete
@@ -101,7 +101,6 @@ class MessageSearchRepository(): #rename SearchRepository
 
     async def search_tweet_last_day(self, user_id: str) -> list[Tweet]:
         delta_date = str(datetime.now() - timedelta(days=1)).split(' ')[0]
-        #delta_date = str(datetime.now() - timedelta(days=1))
         print(delta_date)
 
         query = {'bool': {'must': [
@@ -125,12 +124,14 @@ class MessageSearchRepository(): #rename SearchRepository
         return tweets
 
     async def search_tweet_last_hour(self, user_id: str) -> list[Tweet]:
+        delta_date = str(datetime.now() - timedelta(days=1)).split(' ')[0]
         delta_time = str(datetime.now() - timedelta(hours=1)).split(' ')[1]
         print(delta_time)
 
         query = {'bool': {'must': [
                             {'match': {"user_id": {"query": user_id}}}],
                             'filter': [
+                                    {"range": { "created_date": { "gte": delta_date}}},
                                     {"range": { "created_time": { "gte": delta_time}}}]
                 }}
         response = await self._elasticsearch_client.search(index=self._elasticsearch_messages_index,
@@ -152,9 +153,10 @@ class MessageSearchRepository(): #rename SearchRepository
         await self._elasticsearch_client.create(index=self._elasticsearch_users_index,
                                                                     id=user_id, document=dict(user))
 
-    async def update_user(self, user_id: str, user: UserUpdate):
+    async def update_user(self, user_id: str, user: User):
         await self._elasticsearch_client.update(index=self._elasticsearch_users_index,
                                                                     id=user_id, doc=dict(user)) #testing
+        print(f"updated to elastic")
 
     async def delete_user(self, user_id: str):
         await self._elasticsearch_client.delete(index=self._elasticsearch_users_index, id=user_id)  #testing
@@ -165,7 +167,13 @@ class MessageSearchRepository(): #rename SearchRepository
     async def delete_message(self, tweet_id: str):
         await self._elasticsearch_client.delete(index=self._elasticsearch_messages_index, id=tweet_id)  #testing
         
-    #update message?
+
+    async def update_message(self, tweet_id: str, message: Tweet):
+        print(f" begin updating to elastic")
+        await self._elasticsearch_client.update(index=self._elasticsearch_messages_index,
+                                                                    id=tweet_id, doc=dict(message)) #testing
+        print(f"updated to elastic")
+
 
     @staticmethod
     def get_instance(client: AsyncElasticsearch = Depends(get_elasticsearch_client)):

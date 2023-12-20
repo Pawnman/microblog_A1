@@ -138,11 +138,7 @@ class MessageSearchRepository(): #rename SearchRepository
         return tweets
 
     async def search_tweet_last_hour(self, user_id: str) -> list[Tweet]:
-<<<<<<< HEAD
-        delta_time = str(datetime.now() - timedelta(hours=1))
-=======
         delta_time = str(datetime.now().replace(microsecond=0) - timedelta(hours=1)).split(' ')[1]
->>>>>>> main
         print(delta_time)
 
         query = {"bool": {

@@ -45,7 +45,7 @@ class Users:
         print(f'user followers before.. {user.followers}')
         print(f'following_user following before.. {following_user.following}')
         print(f'following_user followers before.. {following_user.followers}')
-        if (user.following.find(following_user_id)):
+        if (following_user_id in user.following):
             return False
         user.following.append(following_user_id)
         following_user.followers.append(user_id)
@@ -101,7 +101,7 @@ class Messages:
         insert_result = await self._db_collection.insert_one(dict(data))
         return str(insert_result.inserted_id)
 
-    async def get_by_id(self, message_id: str) -> User | None:
+    async def get_by_id(self, message_id: str) -> Tweet | None:
         print(f'Get message {message_id} from mongo')
         db_message = await self._db_collection.find_one(get_filter(message_id))
         return map_message_id(db_message)
@@ -109,7 +109,16 @@ class Messages:
     async def update(self, id: str, data: Tweet):
         db_message = await self._db_collection.find_one_and_update({"_id": ObjectId(id)}, {"$set": dict(data)})
         return map_message_id(db_message)
+    
+    async def delete(self, id: str) -> Tweet | None:
+        db_message = await self._db_collection.find_one_and_delete(get_filter(id))
+        return map_message_id(db_message)
+
+    async def delete(self, id: str) -> Tweet | None:
+        db_message = await self._db_collection.find_one_and_delete(get_filter(id))
+        return map_message_id(db_message)
 
     @staticmethod
     def get_instance(db_collection: AsyncIOMotorCollection = Depends(get_db_messsages_collection)):
         return Messages(db_collection)
+    

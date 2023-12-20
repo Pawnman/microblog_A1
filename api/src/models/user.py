@@ -2,7 +2,6 @@ import datetime
 from pydantic import BaseModel
 
 class User(BaseModel):
-    #id: str #delete
     name: str = ""
     age: int = 0
     email: str = ""

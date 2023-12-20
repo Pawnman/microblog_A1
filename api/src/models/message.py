@@ -10,5 +10,4 @@ class Tweet(BaseModel):
     created_time: str = str(datetime.datetime.now()).split(' ')[1]
 
 class TweetUpdate(BaseModel):
-    #user_id: str = ""
     text: str = ""

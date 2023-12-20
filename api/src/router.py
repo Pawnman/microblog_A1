@@ -9,8 +9,7 @@ from models.message import Tweet, TweetUpdate
 from pymemcache import HashClient
 from memcache import get_memcached_client
 from repository import Users, Messages
-from local_utils.searchdb_repo import *
-from local_utils.searchdb_repo import UserSearchRepository, MessageSearchRepository
+from search_engine.search_repository import UserSearchRepository, MessageSearchRepository
 from utils import tweet_struct_update, user_struct_update
 
 router = APIRouter()

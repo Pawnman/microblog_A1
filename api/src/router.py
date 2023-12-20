@@ -7,11 +7,8 @@ from models.user import User
 from models.message import Tweet
 
 from pymemcache import HashClient
-<<<<<<< HEAD
-from memcache import get_memcached_user_client, get_memcached_message_client
-=======
+
 from memcache import get_memcached_client
->>>>>>> main
 from repository import Users, Messages
 from local_utils.searchdb_repo import *
 from local_utils.searchdb_repo import UserSearchRepository, MessageSearchRepository
@@ -19,8 +16,6 @@ from local_utils.searchdb_repo import UserSearchRepository, MessageSearchReposit
 
 router = APIRouter()
 
-<<<<<<< HEAD
-=======
 '''
 post user 2
 user.update: update model use
@@ -33,18 +28,13 @@ ban
 '''
 
 
-
->>>>>>> main
-
 @router.get("/get_all_users")
 async def get_all_users(users: Users = Depends(Users.get_instance)) -> list[User]:
     return await users.get_all()
 
-<<<<<<< HEAD
 
 # Внесены дополнения с кэшированием
-=======
->>>>>>> main
+
 @router.get("/get_user_account_by_id/{id}", response_model=User)
 async def get_by_id(id: str,
                     users: Users = Depends(Users.get_instance),
@@ -73,6 +63,7 @@ async def find_user_by_name(name: str,
     user_list = await search_db.get_by_name(name)
     return user_list
 
+
  #у каждого пользователя уникальный email, но можно искать пользователей с похожими email
  #идея: регулярка для поиска по доменам например (теоритически для предотвращения регистрации на
  # одну почту, но с разными доменами. Хотя это скорее всего не по поиску делается)
@@ -86,6 +77,7 @@ async def get_user_by_email(email: str,
         return Response(status_code=status.HTTP_404_NOT_FOUND)
     #print(f'user: {user_list[0]}')
     return user_list
+
 
 @router.get("/get_all_tweets")
 async def get_all_tweets(messages: Messages = Depends(Messages.get_instance)) -> list[Tweet]:
@@ -118,6 +110,7 @@ async def find_tweet(pattern: str, user_id: str,
     if not ObjectId.is_valid(user_id):
         return Response(status_code=status.HTTP_400_BAD_REQUEST)
     return await search_db.find_tweet(user_id, pattern)
+
 
 # Поиск твитов конкретного пользователя за последний час и день
 @router.get("/get_tweet_for_last_hour/{user_id}", response_model=list[Tweet])
@@ -152,12 +145,8 @@ async def post_user_account(data: User,
     await search_db.create_user(user_id, data)
     return user_id
 
-<<<<<<< HEAD
 
-@router.post("/post_tweet")#2
-=======
 @router.post("/post_tweet")
->>>>>>> main
 async def post_message(data: Tweet,
                         messages: Messages = Depends(Messages.get_instance),
                         search_db: MessageSearchRepository =
@@ -194,6 +183,7 @@ async def remove_message(message_id: str,
         return Response(status_code=status.HTTP_404_NOT_FOUND)
     await search_db.delete_message(message_id)
     return Response()
+
 
 @router.put("/update_user_account/{id}", response_model=User) #!!!!!!!! add elastic add UserUpdate
 async def update_user_account(id: str, data: User,

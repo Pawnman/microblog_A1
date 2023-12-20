@@ -8,6 +8,7 @@ from utils import *
 
 ## TODO интерфейсный класс
 
+
 class Users:
     _db_collection: AsyncIOMotorCollection
 

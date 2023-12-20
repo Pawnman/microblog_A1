@@ -16,6 +16,7 @@ from local_utils.searchdb_repo import UserSearchRepository, MessageSearchReposit
 
 router = APIRouter()
 
+
 @router.get("/get_all_users")
 async def get_all_users(users: Users = Depends(Users.get_instance)) -> list[User]:
     return await users.get_all()

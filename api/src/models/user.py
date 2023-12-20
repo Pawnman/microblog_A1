@@ -11,15 +11,9 @@ class User(BaseModel):
     following: list = []
     active: bool = True
 
-class UserUpdate(BaseModel): #delete ????
+class UserUpdate(BaseModel):
     name: str = ""
-    #email: str = ""
-    followers: list = []
-    following: list = []
 
-
-class UpdateUserName(BaseModel):
-    name: str = ""
 
 class UpdateFollowers(BaseModel):
     followers: list = []

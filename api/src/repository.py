@@ -3,6 +3,7 @@ from motor.motor_asyncio import AsyncIOMotorCollection
 
 from db import get_db_users_collection, get_db_messsages_collection
 from models.user import User, UpdateFollowers
+from models.message import Tweet, TweetUpdate
 #from student import Student, UpdateStudentModel
 from utils import *
 
@@ -106,7 +107,13 @@ class Messages:
         return map_message_id(db_message)
 
     async def update(self, id: str, data: Tweet):
-        db_message = await self._db_collection.find_one_and_update({"_id": ObjectId(id)}, {"$set": dict(data)})
+        #db_message = await self._db_collection.find_one_and_update({"_id": ObjectId(id)}, {"$set": dict(data)})
+        #db_old_message = await self.get_by_id(id)
+        #new_data: Tweet = tweet_struct_update(db_old_message, data)
+
+        db_message = await self._db_collection.find_one_and_replace(get_filter(id), dict(data))
+        #db_new_message = await self.get_by_id(id)
+        #print(f'update ok: {map_message_id(db_new_message)}')
         return map_message_id(db_message)
     
     async def delete(self, id: str) -> Tweet | None:

@@ -2,7 +2,6 @@ import datetime
 from pydantic import BaseModel
 
 class User(BaseModel):
-    #id: str #delete
     name: str = ""
     age: int = 0
     email: str = ""
@@ -11,15 +10,9 @@ class User(BaseModel):
     following: list = []
     active: bool = True
 
-class UserUpdate(BaseModel): #delete ????
+class UserUpdate(BaseModel):
     name: str = ""
-    #email: str = ""
-    followers: list = []
-    following: list = []
 
-
-class UpdateUserName(BaseModel):
-    name: str = ""
 
 class UpdateFollowers(BaseModel):
     followers: list = []

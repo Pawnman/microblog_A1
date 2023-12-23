@@ -33,7 +33,6 @@ async def connect_and_init_mongo():
     except Exception as ex:
         print(f'Cant connect to mongo: {ex}')
 
-# Сделать фильтрацию, сортировку по id?
 def close_mongo_connect():
     global db_client
     if db_client is None:
